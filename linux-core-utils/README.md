@@ -1,4 +1,280 @@
+# 🐧 Linux Core Utils — Text Processing Cheat Sheet
+
+The Linux command-line toolbox is built around small, composable tools that each do one thing well. This sheet covers text-processing utilities: `grep`, `awk`, `sed`, `sort`, `uniq`, `cut`, `tr`, `wc`, `head`, and `tail`. For file and system utilities (`find`, `chmod`, `tar`, `rsync`, etc.), see [file-system.md](./file-system.md).
+
+[![GNU Coreutils](https://img.shields.io/badge/GNU-coreutils%208.x-blue)](https://www.gnu.org/software/coreutils/)
+[![License](https://img.shields.io/badge/license-MIT-green)](../LICENSE)
+
+> 💡 **Two-part reference:** This file covers text processing. File operations, permissions, processes, `tar`, and `rsync` are in [file-system.md](./file-system.md).
 
 ---
 
-_Content being added — work in progress._
+## Table of Contents
+
+- [Installation](#-installation)
+- [Core Concepts](#-core-concepts)
+- [Quick Reference](#-quick-reference)
+  - [grep flags](#grep-flags)
+  - [awk expressions](#awk-expressions)
+  - [sed commands](#sed-commands)
+- [Common Commands](#-common-commands)
+  - [grep](#grep)
+  - [awk](#awk)
+  - [sed](#sed)
+  - [sort](#sort)
+  - [uniq](#uniq)
+  - [cut](#cut)
+  - [tr](#tr)
+  - [wc](#wc)
+  - [head / tail](#head--tail)
+- [Real-World Examples](#-real-world-examples)
+- [Combining Tools](#-combining-tools)
+- [Pro Tips](#-pro-tips)
+- [Resources](#-resources)
+
+---
+
+## 📦 Installation
+
+These tools are preinstalled on all Linux distributions. macOS ships with BSD variants; install GNU versions for more features and consistent flags. Windows users should use WSL2 or Git Bash for a compatible environment.
+
+```bash
+# macOS: install GNU versions (more features, consistent flags)
+brew install grep gawk gnu-sed coreutils findutils
+
+# Add to your ~/.zshrc or ~/.bashrc to use GNU versions by default:
+export PATH="$(brew --prefix)/opt/coreutils/libexec/gnubin:$PATH"
+export PATH="$(brew --prefix)/opt/grep/libexec/gnubin:$PATH"
+export PATH="$(brew --prefix)/opt/gnu-sed/libexec/gnubin:$PATH"
+export PATH="$(brew --prefix)/opt/findutils/libexec/gnubin:$PATH"
+```
+
+```powershell
+# Windows: use WSL2 (recommended) for a full Linux environment
+wsl --install                              # enables WSL2 with Ubuntu
+
+# Or use Git Bash (ships with Git for Windows) for basic Unix tools
+# Or install GnuWin32: https://gnuwin32.sourceforge.net/
+```
+
+**Key BSD vs GNU differences** — if you skip the GNU install on macOS, watch for these:
+
+| Command | GNU (Linux / macOS after brew) | BSD (macOS default) |
+| ------- | ------------------------------ | ------------------- |
+| `sed -i 's/a/b/' file` | Works as-is | `sed -i '' 's/a/b/' file` (empty backup arg required) |
+| `grep -P 'pattern'` | PCRE patterns supported | Not supported (`-P` is invalid) |
+| `ls --color=auto` | GNU color flag | `ls -G` (BSD color flag) |
+| `xargs -d '\n'` | Custom delimiter | Not supported |
+| `date -d "2 days ago"` | GNU relative date | `date -v-2d` (BSD syntax) |
+| `sort --parallel=4` | Multi-threaded sort | Not supported |
+
+---
+
+## 🧠 Core Concepts
+
+> The Unix philosophy: write programs that do one thing and do it well; write programs that work together; write programs that handle text streams. Each tool in this sheet is a filter — it reads from stdin (or a file), transforms or selects data, and writes to stdout. Chaining them with pipes (`|`) builds powerful, ad-hoc data pipelines without writing a single script.
+
+**The three standard streams:** stdin (0), stdout (1), stderr (2). Redirection operators:
+
+```bash
+command > out.txt        # redirect stdout (overwrite)
+command >> out.txt       # redirect stdout (append)
+command 2> err.txt       # redirect stderr
+command &> all.txt       # redirect both stdout and stderr
+command < input.txt      # feed file as stdin
+command 2>/dev/null      # discard stderr
+```
+
+**Exit codes:**
+
+```bash
+command; echo $?         # 0 = success, non-zero = error
+grep "pattern" file.txt; echo $?  # 0 = found, 1 = not found, 2 = error
+```
+
+**Pipeline flow — how tools chain together:**
+
+```
+cat file.log | grep "ERROR" | awk '{print $5}' | sort | uniq -c | sort -rn
+     │               │               │              │        │         │
+  read file     filter lines    extract field    sort    dedupe    sort by count
+```
+
+---
+
+## ⚡ Quick Reference
+
+### grep flags
+
+| Flag | Description |
+| ---- | ----------- |
+| `-r` | Recursive through directories |
+| `-i` | Case-insensitive |
+| `-n` | Show line numbers |
+| `-v` | Invert match (exclude) |
+| `-l` | Print filenames only |
+| `-c` | Count matching lines |
+| `-E` | Extended regex (same as `egrep`) |
+| `-F` | Fixed string (literal, fastest) |
+| `-o` | Print only matched part |
+| `-A N` | N lines after match |
+| `-B N` | N lines before match |
+| `-C N` | N lines before and after |
+| `--include="*.go"` | Limit to file pattern |
+
+### awk expressions
+
+| Expression | Description |
+| ---------- | ----------- |
+| `$0` | Entire line |
+| `$1`, `$2` | Field 1, 2 (space-delimited) |
+| `NR` | Current record (line) number |
+| `NF` | Number of fields on current line |
+| `-F:` | Set field separator to `:` |
+| `BEGIN{}` | Run before any input |
+| `END{}` | Run after all input |
+
+### sed commands
+
+| Command | Description |
+| ------- | ----------- |
+| `s/old/new/` | Substitute first occurrence per line |
+| `s/old/new/g` | Substitute all occurrences |
+| `s/old/new/gi` | Global + case-insensitive |
+| `-i` | Edit file in-place |
+| `-i.bak` | In-place with backup |
+| `/pattern/d` | Delete matching lines |
+| `-n '5p'` | Print line 5 only |
+| `-n '3,7p'` | Print lines 3–7 |
+
+---
+
+## 🔧 Common Commands
+
+### grep
+
+grep filters lines from files or stdin that match a pattern.
+
+```bash
+# Basic search
+grep "ERROR" app.log
+grep -r "TODO" ./src                    # recursive
+grep -i "error" app.log                 # case-insensitive
+grep -n "panic" main.go                 # show line numbers
+grep -l "config" *.go                   # only filenames
+grep -v "DEBUG" app.log                 # exclude DEBUG lines
+grep -c "ERROR" app.log                 # count matching lines
+grep -A 3 -B 3 "FATAL" app.log          # 3 lines before AND after each match
+
+# Extended regex
+grep -E "error|warning|fatal" app.log   # OR
+grep -E "^[0-9]{4}-[0-9]{2}" app.log   # lines starting with YYYY-MM
+
+# Fixed string (no regex — fastest for literal searches)
+grep -F "user.email[0]" template.html
+
+# Recursive with file filter
+grep -r "TODO" ./src --include="*.go" | wc -l
+```
+
+### awk
+
+awk processes text line by line, splitting each into fields. It has a built-in C-like language for conditions and actions.
+
+```bash
+# Print specific column
+awk '{print $2}' access.log             # column 2 (space-delimited)
+awk -F: '{print $1}' /etc/passwd        # column 1, colon-delimited
+
+# Conditional print
+awk '$3 > 100 {print $1, $3}' metrics.txt
+
+# Sum a column
+awk '{sum += $4} END {print "Total:", sum}' sales.csv
+
+# Print line count
+awk 'END {print NR}' file.txt
+
+# Print specific line
+awk 'NR==5 {print}' file.txt
+
+# Lines with more than 3 fields
+awk 'NF > 3 {print}' data.txt
+
+# BEGIN/END blocks
+awk 'BEGIN {print "=== Report ==="} {print $1} END {print "=== Done ==="}' data.txt
+
+# Multiple delimiters
+awk -F'[,;]' '{print $1}' data.csv
+
+# Count requests per IP from nginx access log
+awk '{print $1}' access.log | sort | uniq -c | sort -rn | head -20
+```
+
+### sed
+
+sed (stream editor) applies editing commands to text line by line.
+
+```bash
+# Substitute
+sed 's/localhost/db.company.com/' config.yml    # first occurrence per line
+sed 's/http:/https:/g' urls.txt                 # all occurrences (global)
+sed 's/foo/bar/gi' file.txt                     # global + case-insensitive
+sed -i 's/v1/v2/g' api-client.go                # in-place edit
+sed -i.bak 's/v1/v2/g' api-client.go            # in-place with .bak backup
+
+# Delete lines
+sed '/^#/d' config.txt                          # delete comment lines
+sed '5d' file.txt                               # delete line 5
+sed '3,7d' file.txt                             # delete lines 3-7
+
+# Print specific lines
+sed -n '5p' file.txt                            # print line 5 only
+sed -n '3,7p' file.txt                          # print lines 3-7
+
+# Insert / append
+sed '3i\# inserted comment' config.txt          # insert before line 3
+sed '3a\# appended comment' config.txt          # append after line 3
+
+# Multiple expressions
+sed -e 's/foo/bar/g' -e 's/baz/qux/g' file.txt
+
+# Remove empty lines
+sed '/^$/d' file.txt
+
+# Remove trailing whitespace
+sed 's/[[:space:]]*$//' file.txt
+```
+
+### sort
+
+```bash
+sort file.txt                           # alphabetical
+sort -n numbers.txt                     # numeric sort
+sort -rn numbers.txt                    # reverse numeric
+sort -k2 data.txt                       # sort by column 2
+sort -t: -k3 -n /etc/passwd             # sort by UID (field 3, colon-separated)
+sort -u file.txt                        # sort + remove duplicates
+sort -f file.txt                        # case-insensitive sort
+sort -h sizes.txt                       # human-readable sizes (1K, 2M, 3G)
+```
+
+**Key flags:**
+
+| Flag | Description |
+| ---- | ----------- |
+| `-n` | Numeric sort |
+| `-r` | Reverse order |
+| `-k N` | Sort by field N |
+| `-t SEP` | Field separator |
+| `-u` | Remove duplicates |
+| `-f` | Case-insensitive |
+| `-h` | Human-readable sizes |
+
+### uniq
+
+uniq collapses adjacent duplicate lines. Input must be sorted first.
+
+```bash
+sort file.txt | uniq                    # remove duplicates
+sort file.txt | uniq -c                 # count occurrences (prepends count)

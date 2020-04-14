@@ -68,7 +68,201 @@ Dockerfile ──build──► Image ──run──► Container
 
 Container ──► Volumes  (persistent data)
           └─► Networks (inter-container communication)
+```
 
 ---
 
-_Content being added — work in progress._
+## 📋 Quick Reference
+
+### Images
+
+| Command | Description |
+| ------- | ----------- |
+| `docker pull nginx:1.25` | Pull image from registry |
+| `docker images` | List local images |
+| `docker images -a` | Include intermediate images |
+| `docker rmi nginx:1.25` | Remove image |
+| `docker build -t myapp:1.0 .` | Build from Dockerfile in current dir |
+| `docker tag myapp:1.0 registry.company.com/myapp:1.0` | Tag image |
+| `docker push registry.company.com/myapp:1.0` | Push to registry |
+| `docker image prune` | Remove dangling images |
+| `docker image prune -a` | Remove all unused images |
+| `docker history nginx:1.25` | Show layer history |
+
+### Containers
+
+| Command | Description |
+| ------- | ----------- |
+| `docker run nginx` | Run container (foreground) |
+| `docker run -d nginx` | Run detached |
+| `docker run -it ubuntu bash` | Interactive shell |
+| `docker run --name webserver nginx` | Named container |
+| `docker run -p 8080:80 nginx` | Map host port 8080 → container port 80 |
+| `docker ps` | List running containers |
+| `docker ps -a` | List all containers |
+| `docker stop webserver` | Graceful stop (SIGTERM) |
+| `docker kill webserver` | Force stop (SIGKILL) |
+| `docker rm webserver` | Remove stopped container |
+| `docker rm -f webserver` | Force remove running container |
+| `docker exec -it webserver bash` | Shell into running container |
+| `docker logs -f webserver` | Follow container logs |
+| `docker inspect webserver` | Full JSON metadata |
+| `docker stats` | Live resource usage |
+
+### Volumes
+
+| Command | Description |
+| ------- | ----------- |
+| `docker volume create pgdata` | Create named volume |
+| `docker volume ls` | List volumes |
+| `docker volume inspect pgdata` | Show volume details |
+| `docker volume rm pgdata` | Remove volume |
+| `docker volume prune` | Remove all unused volumes |
+
+### Networks
+
+| Command | Description |
+| ------- | ----------- |
+| `docker network create mynet` | Create network |
+| `docker network ls` | List networks |
+| `docker network inspect mynet` | Show network details |
+| `docker network rm mynet` | Remove network |
+| `docker network connect mynet webserver` | Connect container to network |
+
+### Cleanup
+
+| Command | Description |
+| ------- | ----------- |
+| `docker system prune` | Remove stopped containers + dangling images + unused networks |
+| `docker system prune -a` | Also remove all unused images # ⚠️ |
+| `docker system df` | Show disk usage breakdown |
+| `docker container prune` | Remove all stopped containers |
+
+---
+
+## 💻 Common Commands
+
+### Running Containers
+
+```bash
+# Basic run
+docker run nginx
+
+# Detached, named, port-mapped
+docker run -d --name webserver -p 8080:80 nginx:1.25
+
+# With environment variables
+docker run -d \
+  --name postgres \
+  -e POSTGRES_PASSWORD=secret \
+  -e POSTGRES_DB=myapp \
+  -p 5432:5432 \
+  postgres:16
+
+# With named volume (data persists after container removal)
+docker run -d \
+  --name postgres \
+  -v pgdata:/var/lib/postgresql/data \
+  -e POSTGRES_PASSWORD=secret \
+  postgres:16
+
+# With bind mount (local dir synced into container)
+docker run -d \
+  --name webserver \
+  -v "$(pwd)/html:/usr/share/nginx/html:ro" \
+  -p 8080:80 \
+  nginx
+
+# Resource limits
+docker run -d \
+  --name api \
+  --memory="512m" \
+  --cpus="0.5" \
+  myapp:1.0
+
+# Environment file
+docker run -d --env-file .env myapp:1.0
+```
+
+### Inspecting and Debugging
+
+```bash
+docker logs webserver                    # view logs
+docker logs -f webserver                 # follow logs live
+docker logs --tail 100 webserver         # last 100 lines
+docker logs --since 10m webserver        # logs from last 10 minutes
+
+docker exec -it webserver bash           # interactive shell
+docker exec -it webserver sh             # if bash not available
+docker exec webserver cat /etc/nginx/nginx.conf   # single command
+
+docker inspect webserver                 # full JSON metadata
+docker inspect webserver | jq '.[0].NetworkSettings.IPAddress'   # extract field
+
+docker stats                             # live CPU/memory/network for all containers
+docker stats webserver                   # single container
+docker top webserver                     # processes inside container
+```
+
+### Volumes
+
+```bash
+docker volume create pgdata
+docker volume ls
+docker volume inspect pgdata
+docker volume rm pgdata
+docker volume prune                     # remove all unused volumes ⚠️
+```
+
+### Networks
+
+```bash
+docker network create mynet
+docker network ls
+docker run -d --name api --network mynet myapp:1.0
+docker run -d --name db  --network mynet postgres:16
+# 'api' container can reach 'db' by hostname 'db'
+```
+
+### Cleanup
+
+```bash
+docker system prune                     # remove stopped containers + dangling images + unused networks
+docker system prune -a                  # also remove all unused images ⚠️
+docker system df                        # show disk usage breakdown
+docker container prune                  # remove all stopped containers
+```
+
+---
+
+## 📄 Dockerfile Reference
+
+### Annotated Best-Practice Dockerfile
+
+```dockerfile
+# Start from an official, minimal base image
+# Use specific tags — never 'latest' in production
+FROM node:20-alpine AS base
+
+# Set working directory (creates it if it doesn't exist)
+WORKDIR /app
+
+# Copy dependency manifests FIRST (before source code)
+# This layer is cached — only re-runs when package.json changes
+COPY package*.json ./
+
+# Install dependencies (ci = clean install, respects package-lock.json)
+RUN npm ci --only=production
+
+# Copy application source code
+# This layer re-runs on every code change
+COPY . .
+
+# Create a non-root user for security
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+# Document the port the app listens on (informational — does not publish it)
+EXPOSE 3000
+
+# HEALTHCHECK tells Docker how to test if the container is healthy

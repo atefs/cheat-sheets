@@ -68,7 +68,132 @@ Regex is built into tools — no installation needed. For testing, see the [Test
 | `\S` | Non-whitespace |
 | `\b` | Word boundary |
 | `\B` | Non-word boundary |
+| `^` | Start of line/string |
+| `$` | End of line/string |
+| `\n` | Newline |
+| `\t` | Tab |
+
+### Quantifiers
+
+| Quantifier | Meaning |
+| ---------- | ------- |
+| `*` | 0 or more (greedy) |
+| `+` | 1 or more (greedy) |
+| `?` | 0 or 1 (optional) |
+| `{n}` | Exactly n times |
+| `{n,}` | n or more times |
+| `{n,m}` | Between n and m times |
+| `*?` | 0 or more (lazy — match as few as possible) |
+| `+?` | 1 or more (lazy) |
+| `??` | 0 or 1 (lazy) |
+
+### Anchors
+
+| Pattern | Matches |
+| ------- | ------- |
+| `^` | Start of line |
+| `$` | End of line |
+| `\A` | Start of string (PCRE only — not multiline) |
+| `\Z` | End of string (PCRE only) |
+| `\b` | Word boundary (between `\w` and `\W`) |
+| `\B` | Non-word boundary |
+
+### Character Classes
+
+| Class | Meaning |
+| ----- | ------- |
+| `[abc]` | Any of: a, b, or c |
+| `[^abc]` | None of: a, b, or c (negated) |
+| `[a-z]` | Any lowercase letter |
+| `[A-Z]` | Any uppercase letter |
+| `[0-9]` | Any digit (same as `\d`) |
+| `[a-zA-Z0-9_]` | Any word character (same as `\w`) |
+| `[:alpha:]` | Letters (POSIX class, used in `[[:alpha:]]`) |
+| `[:digit:]` | Digits (POSIX, used in `[[:digit:]]`) |
+| `[:space:]` | Whitespace (POSIX, used in `[[:space:]]`) |
+| `[:alnum:]` | Letters and digits |
+
+### Groups and Lookarounds
+
+| Pattern | Meaning |
+| ------- | ------- |
+| `(abc)` | Capture group — stores match for backreference |
+| `(?:abc)` | Non-capturing group — groups without storing |
+| `(?P<name>abc)` | Named capture group (PCRE/Python) |
+| `\1`, `\2` | Backreference to capture group 1, 2 |
+| `(?=abc)` | Positive lookahead — match if followed by abc |
+| `(?!abc)` | Negative lookahead — match if NOT followed by abc |
+| `(?<=abc)` | Positive lookbehind — match if preceded by abc |
+| `(?<!abc)` | Negative lookbehind — match if NOT preceded by abc |
+
+### Dialect Comparison: BRE vs ERE vs PCRE
+
+| Feature | BRE (`grep`) | ERE (`grep -E`) | PCRE (`grep -P`, Python, JS) |
+| ------- | ------------ | --------------- | ---------------------------- |
+| Groups | `\(...\)` | `(...)` | `(...)` |
+| Alternation | `\|` | `\|` | `\|` |
+| `+` quantifier | `\+` | `+` | `+` |
+| `?` quantifier | `\?` | `?` | `?` |
+| `{n,m}` | `\{n,m\}` | `{n,m}` | `{n,m}` |
+| `\d`, `\w`, `\s` | ✗ | ✗ | ✓ |
+| Lookahead | ✗ | ✗ | `(?=...)` |
+| Lookbehind | ✗ | ✗ | `(?<=...)` |
+| Named groups | ✗ | ✗ | `(?P<name>...)` |
+| Non-capturing group | ✗ | ✗ | `(?:...)` |
 
 ---
 
-_Content being added — work in progress._
+## ⚙️ Common Commands
+
+```bash
+# BRE (default grep)
+grep "^ERROR" app.log                         # lines starting with ERROR
+grep "\.log$" filelist.txt                    # lines ending with .log
+grep "[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}" log.txt  # BRE date pattern
+
+# ERE (grep -E or egrep)
+grep -E "error|warning|fatal" app.log         # alternation
+grep -E "^[0-9]{4}-[0-9]{2}-[0-9]{2}" app.log  # ERE date pattern
+grep -E "\b[A-Z]{2,}\b" text.txt              # all-caps words
+
+# PCRE (grep -P — Linux only, not macOS default grep)
+grep -P "\d{4}-\d{2}-\d{2}" log.txt           # PCRE digits
+grep -P "(?<=user_id=)\d+" app.log             # lookbehind: extract user IDs
+grep -oP "(?<=ip=)\S+" access.log              # -o print only match + lookbehind
+
+# sed
+sed 's/[0-9]\+/NUM/g' file.txt                # BRE: replace all numbers
+sed -E 's/([0-9]{4})-([0-9]{2})-([0-9]{2})/\3\/\2\/\1/' dates.txt  # ERE: reformat date
+
+# awk
+awk '/ERROR|FATAL/' app.log                   # ERE by default
+awk '!/^#/' config.txt                        # exclude comment lines
+```
+
+---
+
+## 🗂️ Common Patterns
+
+| Pattern | Example Match |
+| ------- | ------------- |
+| `[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}` | `alice@company.com` |
+| `https?://[^\s/$.?#].[^\s]*` | `https://example.com/path?q=1` |
+| `\b(?:\d{1,3}\.){3}\d{1,3}\b` | `203.0.113.5` |
+| `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}` | `550e8400-e29b-41d4-a716-446655440000` |
+| `\d{4}-(?:0[1-9]\|1[0-2])-(?:0[1-9]\|[12]\d\|3[01])` | `2024-01-31` |
+| `(?:[01]\d\|2[0-3]):[0-5]\d:[0-5]\d` | `14:35:09` |
+| `v?\d+\.\d+\.\d+(?:-[a-zA-Z0-9.]+)?` | `v1.23.0-beta.1` |
+| `#[0-9a-fA-F]{3,6}` | `#ff5733` or `#f57` |
+| `\+?[1-9]\d{1,14}` | `+14155552671` (E.164 phone) |
+| `(?:(?:25[0-5]\|2[0-4]\d\|[01]?\d\d?)\.){3}(?:25[0-5]\|2[0-4]\d\|[01]?\d\d?)` | `192.168.1.255` (strict IPv4) |
+
+---
+
+## 💡 Real-World Examples
+
+### 1. Validate an email address in bash
+
+```bash
+email="alice@company.com"
+if echo "$email" | grep -qE "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"; then
+  echo "Valid email"

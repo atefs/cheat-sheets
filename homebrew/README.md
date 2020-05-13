@@ -69,6 +69,93 @@ When you install a package, the binary is symlinked from the Cellar into the pre
 | `brew uninstall --cask firefox` | Uninstall a cask |
 | `brew reinstall git` | Reinstall (useful after corruption) |
 
+### Update and Upgrade
+
+| Command | Description |
+| ------- | ----------- |
+| `brew update` | Update Homebrew and all tap metadata |
+| `brew upgrade` | Upgrade all outdated packages |
+| `brew upgrade git` | Upgrade a specific package |
+| `brew pin git` | Pin: prevent a package from being upgraded |
+| `brew unpin git` | Unpin |
+| `brew outdated` | List packages with available upgrades |
+
+### Search and Info
+
+| Command | Description |
+| ------- | ----------- |
+| `brew search node` | Search formulae and casks |
+| `brew info node` | Show version, deps, options, install path |
+| `brew deps node` | List dependencies |
+| `brew uses --installed node` | Which installed packages depend on node |
+| `brew list` | List installed formulae |
+| `brew list --cask` | List installed casks |
+| `brew leaves` | List installed packages with no dependents |
+
+### Maintenance
+
+| Command | Description |
+| ------- | ----------- |
+| `brew cleanup` | Remove old versions of all packages |
+| `brew cleanup -n` | Preview what cleanup would remove |
+| `brew doctor` | Diagnose potential issues |
+| `brew autoremove` | Remove unused dependencies |
+| `brew missing` | Check for missing dependencies |
+
+### Taps
+
+| Command | Description |
+| ------- | ----------- |
+| `brew tap homebrew/cask-fonts` | Add a tap |
+| `brew tap hashicorp/tap` | Add HashiCorp tap |
+| `brew install hashicorp/tap/terraform` | Install from a specific tap |
+| `brew tap-info homebrew/cask` | Show info about a tap |
+| `brew untap some/tap` | Remove a tap |
+
 ---
 
-_Content being added — work in progress._
+## ⚙️ Common Commands
+
+### Basic package operations
+
+```bash
+# Install
+brew install neovim
+brew install --cask visual-studio-code    # GUI app
+
+# Upgrade
+brew update                               # update Homebrew metadata
+brew upgrade                              # upgrade everything
+brew upgrade neovim                       # upgrade one package
+
+# Search
+brew search python                        # searches both formulae and casks
+brew info python@3.12                     # details, version, installed location
+
+# Uninstall
+brew uninstall neovim
+brew uninstall --cask visual-studio-code
+brew autoremove                           # remove now-unused dependencies
+
+# Maintenance
+brew cleanup                              # remove old downloads and versions
+brew doctor                               # check for problems and suggest fixes
+brew outdated                             # list what needs upgrading
+```
+
+### Taps
+
+```bash
+# Add the HashiCorp tap and install Terraform
+brew tap hashicorp/tap
+brew install hashicorp/tap/terraform
+
+# Add font cask (for Nerd Fonts, etc.)
+brew tap homebrew/cask-fonts
+brew install --cask font-jetbrains-mono-nerd-font
+
+# List tapped repositories
+brew tap
+
+# Remove a tap (and all its formulae)
+brew untap some/tap

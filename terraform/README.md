@@ -68,7 +68,189 @@ Write .tf files ──► terraform init ──► terraform plan ──► terr
                                                               │
                                                        terraform.tfstate
                                                               │
+                                                       terraform destroy
+```
+
+> ⚠️ **Never edit `.tfstate` by hand.** The state file is managed exclusively by Terraform. Manual edits corrupt the state and can cause Terraform to create duplicate resources or destroy infrastructure it thinks is missing. Use `terraform state` subcommands for all state manipulation.
 
 ---
 
-_Content being added — work in progress._
+## 📋 Quick Reference
+
+### Core Workflow
+
+| Command | Description |
+| ------- | ----------- |
+| `terraform init` | Download providers, set up backend |
+| `terraform validate` | Check syntax and configuration validity |
+| `terraform fmt` | Auto-format all `.tf` files |
+| `terraform plan` | Preview changes |
+| `terraform plan -out=tfplan` | Save plan to file |
+| `terraform apply` | Apply changes (prompts for confirmation) |
+| `terraform apply tfplan` | Apply saved plan (no confirmation) |
+| `terraform destroy` | Destroy all managed resources # ⚠️ |
+| `terraform apply -target=aws_instance.web` | Apply only a specific resource |
+
+### State Management
+
+| Command | Description |
+| ------- | ----------- |
+| `terraform show` | Human-readable current state |
+| `terraform state list` | List all resources in state |
+| `terraform state show aws_s3_bucket.assets` | Show one resource's state |
+| `terraform state rm aws_s3_bucket.assets` | Remove resource from state (without destroying) |
+| `terraform import aws_s3_bucket.assets my-bucket` | Import existing resource |
+| `terraform output` | Show output values |
+
+### Workspaces
+
+| Command | Description |
+| ------- | ----------- |
+| `terraform workspace list` | List workspaces |
+| `terraform workspace new staging` | Create workspace |
+| `terraform workspace select staging` | Switch to workspace |
+| `terraform workspace show` | Show current workspace |
+
+---
+
+## 🔧 HCL Syntax
+
+```hcl
+# ── Provider Configuration ──────────────────────────────────────────────────
+terraform {
+  required_version = ">= 1.6.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"       # allow 5.x, not 6.x (lock minor version)
+    }
+  }
+}
+
+provider "aws" {
+  region = var.region
+}
+
+# ── Variables ───────────────────────────────────────────────────────────────
+variable "region" {
+  description = "AWS region to deploy to"
+  type        = string
+  default     = "us-east-1"
+}
+
+variable "environment" {
+  description = "Deployment environment"
+  type        = string
+  validation {
+    condition     = contains(["dev", "staging", "prod"], var.environment)
+    error_message = "environment must be dev, staging, or prod."
+  }
+}
+
+variable "allowed_ports" {
+  description = "List of ports to allow inbound"
+  type        = list(number)
+  default     = [80, 443]
+}
+
+# ── Locals ──────────────────────────────────────────────────────────────────
+locals {
+  env    = var.environment
+  prefix = "myapp-${local.env}"
+  tags = {
+    Environment = local.env
+    ManagedBy   = "terraform"
+    Project     = "myapp"
+  }
+}
+
+# ── Resource ────────────────────────────────────────────────────────────────
+resource "aws_s3_bucket" "assets" {
+  bucket = "${local.prefix}-assets"
+  tags   = local.tags
+}
+
+# ── Data Source ─────────────────────────────────────────────────────────────
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  owners      = ["099720109477"]   # Canonical
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-22.04-amd64-server-*"]
+  }
+}
+
+# ── Output ──────────────────────────────────────────────────────────────────
+output "bucket_arn" {
+  description = "S3 bucket ARN for the assets bucket"
+  value       = aws_s3_bucket.assets.arn
+}
+
+output "bucket_name" {
+  value     = aws_s3_bucket.assets.bucket
+  sensitive = false
+}
+
+# ── Count-based conditionals ─────────────────────────────────────────────────
+resource "aws_instance" "bastion" {
+  count         = var.environment == "prod" ? 1 : 0
+  ami           = data.aws_ami.ubuntu.id
+  instance_type = "t3.micro"
+  tags          = merge(local.tags, { Name = "${local.prefix}-bastion" })
+}
+
+# ── for_each ─────────────────────────────────────────────────────────────────
+resource "aws_iam_user" "team" {
+  for_each = toset(["alice", "bob", "carol"])
+  name     = each.key
+  tags     = local.tags
+}
+
+# ── Dynamic blocks ───────────────────────────────────────────────────────────
+resource "aws_security_group" "web" {
+  name   = "${local.prefix}-web-sg"
+  vpc_id = aws_vpc.main.id
+
+  dynamic "ingress" {
+    for_each = var.allowed_ports
+    content {
+      from_port   = ingress.value
+      to_port     = ingress.value
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+```
+
+### Backend Configuration — Remote State in S3 with DynamoDB Locking
+
+```hcl
+# backend.tf
+terraform {
+  backend "s3" {
+    bucket         = "myapp-terraform-state"    # must exist before terraform init
+    key            = "prod/terraform.tfstate"   # path within the bucket
+    region         = "us-east-1"
+    encrypt        = true                       # encrypt state at rest
+
+    # DynamoDB table for state locking (prevents concurrent applies)
+    dynamodb_table = "myapp-terraform-locks"
+  }
+}
+```
+
+Create the S3 bucket and DynamoDB table (do this once manually or with a bootstrap module):
+
+```bash
+# S3 bucket
+aws s3api create-bucket \
+  --bucket myapp-terraform-state \

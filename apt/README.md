@@ -68,7 +68,141 @@ Three layers, from highest to lowest:
 
 | Command | Description |
 | ------- | ----------- |
+| `apt search nginx` | Search package names and descriptions |
+| `apt show nginx` | Package details, version, dependencies |
+| `apt list --installed` | All installed packages |
+| `apt list --upgradable` | Packages with available upgrades |
+| `apt-cache policy nginx` | Show available versions and repo priority |
+| `apt-cache depends nginx` | Show dependencies |
+| `apt-cache rdepends nginx` | Show reverse dependencies |
+
+### dpkg
+
+| Command | Description |
+| ------- | ----------- |
+| `sudo dpkg -i package.deb` | Install local `.deb` file |
+| `dpkg -l` | List all installed packages |
+| `dpkg -l nginx` | Check if nginx is installed |
+| `dpkg -L nginx` | List files installed by package |
+| `dpkg -S /usr/sbin/nginx` | Which package owns this file |
+| `dpkg --get-selections` | List all packages with their status |
 
 ---
 
-_Content being added — work in progress._
+## ⚙️ Common Commands
+
+### Everyday package management
+
+```bash
+# Always update before installing
+sudo apt update
+
+# Install packages
+sudo apt install nginx
+sudo apt install nginx postgresql redis-server   # multiple at once
+sudo apt install -y nginx                        # non-interactive (no prompt)
+sudo apt install --no-install-recommends nginx   # minimal install (no optional deps)
+
+# Upgrade
+sudo apt upgrade                                 # safe: never removes packages
+sudo apt full-upgrade                            # may remove packages to resolve deps
+
+# Remove
+sudo apt remove nginx                            # remove binary, keep /etc/nginx
+sudo apt purge nginx                             # remove binary AND /etc/nginx
+sudo apt autoremove                              # remove orphaned dependencies
+
+# Cache
+sudo apt clean                                   # delete all cached .deb files
+sudo apt autoclean                               # delete only outdated cached .deb files
+
+# Fix broken installs
+sudo apt install -f                              # fix and complete broken installs
+sudo dpkg --configure -a                         # reconfigure partially installed packages
+```
+
+### apt-get in scripts and Dockerfiles
+
+```bash
+# In scripts and Dockerfiles: use apt-get, not apt
+apt-get update -qq                              # quiet update (warnings only)
+apt-get install -y --no-install-recommends \    # non-interactive, minimal
+  nginx \
+  curl \
+  ca-certificates
+
+# Clean up after install to reduce image size
+apt-get clean && rm -rf /var/lib/apt/lists/*
+```
+
+### dpkg usage
+
+```bash
+# Install a local .deb file
+sudo dpkg -i ./slack-desktop-4.36.140-amd64.deb
+# If dpkg reports missing dependencies:
+sudo apt install -f                              # resolve and install missing deps
+
+# Query installed packages
+dpkg -l                                         # all packages
+dpkg -l | grep nginx                            # filter
+dpkg -L nginx                                   # files installed by nginx
+dpkg -S /usr/sbin/nginx                         # which package owns /usr/sbin/nginx
+
+# Get package version
+dpkg -l nginx | awk '/^ii/{print $3}'
+```
+
+---
+
+## Adding a Third-Party Repository (Modern Method)
+
+The old method (`apt-key add`) is deprecated because keys added that way are trusted for **all** repositories, not just the one you're adding. The modern approach scopes the key to a specific repository using `signed-by=` in the repository definition.
+
+```bash
+# Example: Add Docker's official repository (Ubuntu)
+
+# Step 1: Download the signing key and store it in the keyring directory
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+  | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+# Step 2: Add the repository pointing to that specific key
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Step 3: Update and install
+sudo apt update
+sudo apt install docker-ce docker-ce-cli containerd.io
+```
+
+> ⚠️ **Why not `apt-key add`?** The old `sudo apt-key add pubkey.gpg` method adds the key to a global keyring (`/etc/apt/trusted.gpg`) that applies to every repository. This means a compromised or malicious key could sign packages from any repo. The `signed-by=` approach scopes the key to one specific repository line.
+
+---
+
+## Package Pinning — Prevent or Force Specific Versions
+
+Pinning controls which version `apt` installs or upgrades to.
+
+```
+# /etc/apt/preferences.d/nginx
+# Pin nginx to a specific version — prevent upgrade
+Package: nginx
+Pin: version 1.24.*
+Pin-Priority: 1001
+```
+
+```
+# /etc/apt/preferences.d/hold-nginx
+# Priority -1 = never install from any repo
+Package: nginx
+Pin: release *
+Pin-Priority: -1
+```
+
+Alternative: use `apt-mark` for simpler holds:
+
+```bash

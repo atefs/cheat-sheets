@@ -347,3 +347,149 @@ git reset --hard HEAD~1
 ### Stashing
 
 ```bash
+# Stash all uncommitted changes
+git stash
+
+# Stash with a descriptive name
+git stash push -m "WIP: login form validation"
+
+# List all stashes
+git stash list
+# stash@{0}: On main: WIP: login form validation
+# stash@{1}: WIP on feature/login: abc1234 fix typo
+
+# Apply the most recent stash and remove it from the list
+git stash pop
+
+# Apply a specific stash without removing it
+git stash apply stash@{2}
+
+# Delete a specific stash
+git stash drop stash@{0}
+
+# Remove all stashes # ⚠️
+git stash clear
+```
+
+---
+
+## 🌍 Real-World Examples
+
+### 1. Start a Feature Branch and Open a PR
+
+You want to add a new feature, keep it isolated, push, and open a pull request.
+
+```bash
+# 1. Start from an up-to-date main
+git switch main
+git pull origin main
+
+# 2. Create feature branch
+git switch -c feat/user-authentication
+
+# 3. Make changes, commit with conventional format
+git add src/auth/
+git commit -m "feat(auth): add JWT token validation"
+git commit -m "test(auth): add unit tests for token service"
+
+# 4. Push and open PR
+git push -u origin feat/user-authentication
+# Then open PR on GitHub
+```
+
+### 2. Interactive Rebase to Clean Up Messy Commits
+
+You have 4 WIP commits before merging; squash and reword them.
+
+```bash
+# Rebase last 4 commits interactively
+git rebase -i HEAD~4
+
+# In the editor, change 'pick' to:
+#   r  reword  — keep commit, change message
+#   s  squash  — merge into previous commit
+#   f  fixup   — squash + discard this commit's message
+#   d  drop    — delete commit entirely
+
+# Example editor content:
+# pick abc1234 feat(auth): scaffold login page
+# s   def5678 wip
+# s   ghi9012 fix typo
+# r   jkl3456 refactor token handler
+```
+
+> 💡 Use `fixup` (`f`) instead of `squash` (`s`) when the commit message is throwaway (e.g., "wip", "fix", "asdf"). It squashes the commit without opening a message editor.
+
+### 3. Resolve a Merge Conflict
+
+You run `git merge feature/login` and hit conflicts.
+
+```bash
+# After git merge feature/login produces conflicts:
+git status                    # shows "both modified: src/app.js"
+
+# Open src/app.js — conflict markers look like:
+# <<<<<<< HEAD
+# const port = 3000;
+# =======
+# const port = process.env.PORT || 3000;
+# >>>>>>> feature/login
+
+# Edit the file to the correct resolution, then:
+git add src/app.js
+git commit                    # completes the merge
+# or: git mergetool           # opens configured merge tool
+```
+
+> 💡 Set a visual merge tool with `git config --global merge.tool vimdiff` (or `vscode`, `meld`, etc.) and run `git mergetool` for a side-by-side diff.
+
+### 4. Recover a Deleted Branch
+
+You ran `git branch -D feature/payment` by accident.
+
+```bash
+# Find the SHA of the deleted branch tip
+git reflog                    # look for the last commit on that branch
+# Output: abc1234 HEAD@{3}: checkout: moving from feature/payment to main
+
+# Recreate the branch at that commit
+git switch -c feature/payment abc1234
+```
+
+> 💡 `git reflog` records every movement of HEAD, including branch switches and resets. It's your safety net for recovering "lost" work — but only for commits that existed locally.
+
+### 5. Cherry-Pick a Commit from Another Branch
+
+You want one specific commit from `hotfix/timezone-fix` on `main` without merging the whole branch.
+
+```bash
+# Get the commit SHA from the other branch
+git log --oneline hotfix/timezone-fix
+
+# Apply it to current branch
+git cherry-pick abc1234
+
+# If conflicts occur:
+git cherry-pick --continue    # after resolving conflicts
+git cherry-pick --abort       # to cancel and return to previous state
+```
+
+---
+
+## ⚙️ Configuration
+
+### ~/.gitconfig (Annotated)
+
+```ini
+[user]
+  name = Alice
+  email = alice@example.com
+
+[core]
+  editor = vim                ; Windows: "code --wait" for VS Code, or "notepad"
+  autocrlf = input            ; Linux/macOS: input (LF on commit, no conversion on checkout)
+                              ; Windows: true (CRLF on checkout, LF on commit)
+
+[pull]
+  rebase = true               ; rebase on pull instead of merge
+

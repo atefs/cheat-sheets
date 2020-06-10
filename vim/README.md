@@ -236,3 +236,103 @@ Esc " return to Normal mode
 :q             " quit (fails if unsaved changes)
 :wq            " save and quit
 :x             " save and quit (only writes if changed)
+ZZ             " save and quit (Normal mode shortcut)
+:q!            " quit without saving
+ZQ             " quit without saving (Normal mode shortcut)
+:wa            " save all buffers
+:qa!           " quit all without saving
+```
+
+> ⚠️ `:q!` discards all unsaved changes permanently. Unlike most editors, Vim will not prompt you again. Use `:w` first, or `:wqa` to save-and-quit all buffers.
+
+### Search and Replace
+
+```vim
+/pattern       " search forward (regex supported)
+?pattern       " search backward
+n / N          " next / previous match
+*              " search word under cursor (forward)
+#              " search word under cursor (backward)
+
+:%s/old/new/g          " replace all occurrences in file
+:%s/old/new/gc         " replace all, confirm each
+:10,20s/old/new/g      " replace in lines 10–20
+:%s/\bword\b/new/g     " whole-word replacement (word boundary)
+```
+
+### Buffers and Files
+
+```vim
+:e filename    " open file (or create new buffer)
+:ls            " list open buffers
+:b2            " switch to buffer 2
+:b filename    " switch to buffer by name (Tab to complete)
+:bd            " close/delete current buffer
+:bn / :bp      " next / prev buffer
+```
+
+### Windows and Splits
+
+```vim
+:sp filename   " horizontal split (open file in split)
+:vsp filename  " vertical split
+Ctrl-w w       " cycle to next window
+Ctrl-w h/j/k/l " navigate windows (left/down/up/right)
+Ctrl-w =       " equalize all window sizes
+Ctrl-w q       " close current window
+Ctrl-w o       " close all windows except current
+Ctrl-w r       " rotate windows
+```
+
+### Marks
+
+```vim
+m{a-z}         " set local mark (lowercase = file-local)
+m{A-Z}         " set global mark (uppercase = cross-file, persists)
+'{mark}        " jump to mark (first non-blank of line)
+`{mark}        " jump to mark (exact cursor position)
+:marks         " list all marks
+``             " jump back to position before last jump
+```
+
+---
+
+## 🌍 Real-World Examples
+
+### 1. Edit a Config File Efficiently
+
+You want to update a specific block in `/etc/nginx/nginx.conf` without touching the rest.
+
+```vim
+" Open the file
+vim /etc/nginx/nginx.conf
+
+" Search for the server block
+/server_name
+
+" Jump inside the braces and replace the entire block content
+ci{
+" Now type your new block content, then Esc
+
+" Save and quit
+:wq
+```
+
+> 💡 `ci{` means "change inside curly braces" — it deletes everything between `{` and `}` and drops you into Insert mode. No need to manually select or navigate to the boundaries.
+
+### 2. Multi-Line Search and Replace with Confirmation
+
+You want to rename a function across the whole file but verify each replacement.
+
+```vim
+" Replace all occurrences of getUserData with fetchUserProfile, confirm each
+:%s/getUserData/fetchUserProfile/gc
+
+" At each match, type:
+"   y  — yes, replace
+"   n  — no, skip
+"   a  — replace all remaining without confirming
+"   q  — quit substitution
+"   l  — replace this one and quit
+```
+

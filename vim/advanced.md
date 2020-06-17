@@ -267,3 +267,116 @@ The `:` command-line is far more powerful than most users realize. These command
 
 " Print all lines containing 'webserver' (without deleting)
 :g/webserver/p
+
+" Execute a normal-mode command on every matching line
+:g/def /normal >>
+```
+
+> 💡 `:g` (global) runs any Ex command on each line matching the pattern. `:v` (vglobal) is the inverse — it runs the command on lines that do NOT match. These two commands replace most scripting for bulk edits.
+
+---
+
+## ⚙️ vimrc / init.vim Annotated Config
+
+Place this in `~/.vimrc` (Vim) or `~/.config/nvim/init.vim` (Neovim using Vimscript).
+
+**Config file paths by platform:**
+
+| Platform | Vim | Neovim |
+| -------- | --- | ------ |
+| macOS / Linux | `~/.vimrc` | `~/.config/nvim/init.vim` or `~/.config/nvim/init.lua` |
+| Windows (native) | `%USERPROFILE%\_vimrc` | `%LOCALAPPDATA%\nvim\init.vim` or `%LOCALAPPDATA%\nvim\init.lua` |
+| Windows (WSL) | `~/.vimrc` | `~/.config/nvim/init.lua` (within WSL filesystem) |
+
+```vim
+" ============ Basics ============
+set number relativenumber     " hybrid line numbers (absolute on current, relative on others)
+set tabstop=2 shiftwidth=2 expandtab  " 2-space indentation, spaces not tabs
+set ignorecase smartcase      " case-insensitive unless you type an uppercase letter
+set clipboard=unnamedplus     " use system clipboard for all yank/paste operations
+set undofile                  " persistent undo history — survives closing the file
+set splitright splitbelow     " new splits open to the right and below (more natural)
+set scrolloff=8               " keep 8 lines visible above/below cursor while scrolling
+set cursorline                " highlight the line the cursor is on
+set signcolumn=yes            " always show sign column (prevents layout shift with LSP/git)
+set updatetime=250            " faster CursorHold events (improves plugin responsiveness)
+set termguicolors             " enable true-color (24-bit) support in terminal
+
+" ============ Keymaps ============
+let mapleader = " "           " space as leader key (most common choice)
+
+nnoremap <leader>w :w<CR>
+nnoremap <leader>q :q<CR>
+nnoremap <leader>e :Ex<CR>    " open netrw file explorer
+
+" Keep cursor centered after half-page scroll
+nnoremap <C-d> <C-d>zz
+nnoremap <C-u> <C-u>zz
+
+" Keep cursor centered when jumping through search results
+nnoremap n nzzzv
+nnoremap N Nzzzv
+
+" Move selected lines up/down in Visual mode and re-indent
+vnoremap J :m '>+1<CR>gv=gv
+vnoremap K :m '<-2<CR>gv=gv
+```
+
+> 💡 `zz` centers the screen on the cursor. Chaining it after navigation (e.g., `<C-d>zz`) keeps context visible and prevents disorientation in large files.
+
+---
+
+## 🚀 Neovim-Specific Configuration
+
+Neovim supports both Vimscript (`init.vim`) and Lua (`init.lua`). The Lua API is the modern, preferred approach for new configurations.
+
+### `init.lua` Basics
+
+```lua
+-- ~/.config/nvim/init.lua
+
+-- Basic options (Lua equivalent of :set)
+vim.opt.number = true
+vim.opt.relativenumber = true
+vim.opt.tabstop = 2
+vim.opt.shiftwidth = 2
+vim.opt.expandtab = true
+vim.opt.ignorecase = true
+vim.opt.smartcase = true
+vim.opt.clipboard = "unnamedplus"
+vim.opt.undofile = true
+vim.opt.splitright = true
+vim.opt.splitbelow = true
+vim.opt.scrolloff = 8
+vim.opt.cursorline = true
+vim.opt.signcolumn = "yes"
+vim.opt.updatetime = 250
+vim.opt.termguicolors = true
+
+-- Leader key (set before loading plugins)
+vim.g.mapleader = " "
+
+-- Keymaps
+local map = vim.keymap.set
+map("n", "<leader>w", "<cmd>w<cr>")
+map("n", "<leader>q", "<cmd>q<cr>")
+map("n", "<C-d>", "<C-d>zz")
+map("n", "<C-u>", "<C-u>zz")
+map("n", "n", "nzzzv")
+map("n", "N", "Nzzzv")
+map("v", "J", ":m '>+1<CR>gv=gv")
+map("v", "K", ":m '<-2<CR>gv=gv")
+```
+
+### Plugin Manager: `lazy.nvim`
+
+`lazy.nvim` is the current standard plugin manager for Neovim. It lazy-loads plugins automatically for fast startup.
+
+```lua
+-- Bootstrap lazy.nvim (add near the top of init.lua)
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not vim.loop.fs_stat(lazypath) then
+  vim.fn.system({
+    "git", "clone", "--filter=blob:none",
+    "https://github.com/folke/lazy.nvim.git",
+    "--branch=stable", lazypath,

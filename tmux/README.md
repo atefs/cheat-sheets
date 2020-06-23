@@ -251,3 +251,108 @@ tmux attach -t shared
 tmux attach -t shared -r
 ```
 
+### 3. Long-running remote task: detach and reconnect
+
+> You SSH into a server, start a database migration, detach, and reconnect the next morning.
+
+```bash
+# On the remote server, start or attach to a tmux session
+tmux new-session -A -s migration
+
+# Start the long-running task
+python manage.py migrate --run-syncdb 2>&1 | tee migration.log
+
+# Detach safely (task keeps running)
+# Prefix + d
+
+# Next day — reconnect
+ssh alice@server.company.com
+tmux attach -t migration
+
+# View the log while it runs
+tail -f migration.log
+```
+
+### 4. Scripted session layout
+
+> You want to automate creating your full development environment with a shell script.
+
+```bash
+#!/usr/bin/env bash
+# dev-session.sh — create a full dev environment in one command
+
+SESSION="dev"
+
+# Kill existing session if it exists
+tmux kill-session -t "$SESSION" 2>/dev/null
+
+# Create session with first window: editor
+tmux new-session -d -s "$SESSION" -n "editor" -x 220 -y 50
+
+# Start vim in the editor window
+tmux send-keys -t "$SESSION:editor" "vim ." Enter
+
+# Create second window: server
+tmux new-window -t "$SESSION" -n "server"
+tmux send-keys -t "$SESSION:server" "npm run dev" Enter
+
+# Create third window: logs, split into two panes
+tmux new-window -t "$SESSION" -n "logs"
+tmux split-window -h -t "$SESSION:logs"
+
+# Left pane: follow app log
+tmux send-keys -t "$SESSION:logs.0" "tail -f logs/app.log" Enter
+
+# Right pane: htop
+tmux send-keys -t "$SESSION:logs.1" "htop" Enter
+
+# Focus the editor window on attach
+tmux select-window -t "$SESSION:editor"
+
+# Attach to the session
+tmux attach-session -t "$SESSION"
+```
+
+---
+
+## ⚙️ Configuration
+
+The configuration file lives at `~/.tmux.conf`. Changes take effect after reloading with `tmux source-file ~/.tmux.conf` or `Prefix + r` (if you add that binding).
+
+```bash
+# ~/.tmux.conf
+
+# ── Prefix Key ─────────────────────────────────────────────────────────────
+# Change prefix from Ctrl-b to Ctrl-a (screen-style, easier to reach)
+unbind C-b
+set-option -g prefix C-a
+bind-key C-a send-prefix
+
+# ── General ────────────────────────────────────────────────────────────────
+set -g mouse on                       # mouse support (click, scroll, resize)
+set -g base-index 1                   # windows start at 1 (easier keyboard reach)
+setw -g pane-base-index 1             # panes start at 1
+set -g renumber-windows on            # renumber when a window is closed
+set -sg escape-time 0                 # no delay for Esc key (important for Vim)
+set -g history-limit 50000            # larger scrollback buffer
+set -g display-time 4000              # display messages for 4 seconds
+set -g status-interval 5              # refresh status bar every 5 seconds
+
+# ── Splits ─────────────────────────────────────────────────────────────────
+# Open splits in the current directory
+bind '"' split-window -v -c "#{pane_current_path}"
+bind '%' split-window -h -c "#{pane_current_path}"
+
+# ── Navigation ─────────────────────────────────────────────────────────────
+# Vim-style pane navigation
+bind h select-pane -L
+bind j select-pane -D
+bind k select-pane -U
+bind l select-pane -R
+
+# Resize panes with Vim-style keys (repeatable with -r)
+bind -r H resize-pane -L 5
+bind -r J resize-pane -D 5
+bind -r K resize-pane -U 5
+bind -r L resize-pane -R 5
+

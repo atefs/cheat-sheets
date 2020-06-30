@@ -278,3 +278,120 @@ uniq collapses adjacent duplicate lines. Input must be sorted first.
 ```bash
 sort file.txt | uniq                    # remove duplicates
 sort file.txt | uniq -c                 # count occurrences (prepends count)
+sort file.txt | uniq -d                 # show only duplicated lines
+sort file.txt | uniq -u                 # show only lines that appear once
+sort file.txt | uniq -c | sort -rn      # frequency table (most common first)
+```
+
+> ⚠️ `uniq` only removes **adjacent** duplicates. Always `sort` first unless your data is already sorted.
+
+### cut
+
+cut extracts specific fields or character ranges from each line.
+
+```bash
+cut -d: -f1 /etc/passwd                 # first field, colon delimiter (usernames)
+cut -d, -f1,3 data.csv                  # fields 1 and 3, comma delimiter
+cut -d: -f1,3 /etc/passwd               # fields 1 and 3
+cut -c1-10 file.txt                     # characters 1-10 of each line
+cut -c5- file.txt                       # from character 5 to end of line
+```
+
+### tr
+
+tr translates or deletes characters.
+
+```bash
+tr 'a-z' 'A-Z' < file.txt              # convert to uppercase
+tr 'A-Z' 'a-z' < file.txt              # convert to lowercase
+tr -d '\n' < file.txt                   # remove all newlines (join lines)
+tr -d ' ' < file.txt                    # remove all spaces
+tr -s ' ' < file.txt                    # squeeze multiple spaces to one
+echo "hello world" | tr ' ' '\n'        # split on space (one word per line)
+echo "a,b,c" | tr ',' '\t'             # replace commas with tabs
+tr -dc '[:alnum:]' < /dev/urandom | head -c 16  # generate 16-char random string
+```
+
+### wc
+
+```bash
+wc -l file.txt                          # line count
+wc -w file.txt                          # word count
+wc -c file.txt                          # byte count
+wc -l *.log                             # line counts for multiple files
+ls ./src | wc -l                        # count files in directory
+```
+
+### head / tail
+
+```bash
+head -20 file.txt                       # first 20 lines (default: 10)
+head -1 file.txt                        # first line only
+tail -20 file.txt                       # last 20 lines
+tail -1 file.txt                        # last line only
+tail -f /var/log/app.log                # follow: stream new lines as they appear
+tail -f /var/log/app.log | grep ERROR   # follow + filter live
+tail -n +5 file.txt                     # print from line 5 onwards (skip first 4)
+```
+
+---
+
+## 🌍 Real-World Examples
+
+### 1. Find all TODO/FIXME comments in a codebase
+
+> You want a list of every TODO or FIXME across all source files, with filenames and line numbers.
+
+```bash
+# Recursive search with line numbers
+grep -rn "TODO\|FIXME" ./src --include="*.go"
+
+# Count per file
+grep -rl "TODO" ./src --include="*.go" | while read f; do
+  count=$(grep -c "TODO" "$f")
+  echo "$count $f"
+done | sort -rn
+```
+
+### 2. Parse nginx access logs: top IPs and status codes
+
+> You want to find the top 10 client IPs and see a breakdown of HTTP status codes.
+
+```bash
+# Top 10 IPs by request count
+awk '{print $1}' /var/log/nginx/access.log \
+  | sort | uniq -c | sort -rn | head -10
+
+# Status code distribution
+awk '{print $9}' /var/log/nginx/access.log \
+  | sort | uniq -c | sort -rn
+
+# Requests in the last hour (assuming ISO timestamp in field 4)
+awk -v d="$(date '+%d/%b/%Y:%H')" '$4 ~ d {print $1}' /var/log/nginx/access.log \
+  | sort | uniq -c | sort -rn | head -10
+```
+
+### 3. Bulk find-and-replace in config files
+
+> You need to rename a database host from `db-old.company.com` to `db-prod.company.com` across all config files.
+
+```bash
+# Preview changes first (dry run — no -i)
+grep -rl "db-old.company.com" ./config/
+
+# Apply in-place with backup
+find ./config -name "*.yml" -o -name "*.env" \
+  | xargs sed -i.bak 's/db-old\.company\.com/db-prod.company.com/g'
+
+# Verify
+grep -r "db-old" ./config/          # should return nothing
+grep -r "db-prod" ./config/         # should show replacements
+
+# Remove backups when satisfied
+find ./config -name "*.bak" -delete
+```
+
+### 4. Extract unique values from a CSV column
+
+> You have a CSV export and want all unique values from the "status" column (column 3).
+

@@ -245,3 +245,107 @@ kill -15 1234                       # same as above (SIGTERM = 15)
 kill -9 1234                        # SIGKILL — force stop (use as last resort) # ⚠️
 killall nginx                       # kill all processes named "nginx"
 pkill -f "python worker.py"         # kill by full command match
+
+# Job control
+long-command &                      # run in background
+jobs                                # list background jobs
+fg %1                               # bring job 1 to foreground
+bg %1                               # resume job 1 in background
+nohup long-command &                # run in background, survive terminal close
+disown %1                           # detach job from shell (survives logout)
+```
+
+> ⚠️ Use `kill -9` only when the process ignores SIGTERM. It cannot be caught or handled and may leave resources (locks, temp files) in a dirty state.
+
+### tar — Archiving
+
+tar creates and extracts archives. The flags can be combined without `-`.
+
+```bash
+# Create archives
+tar -czf archive.tar.gz  ./project/        # create + gzip compress
+tar -cjf archive.tar.bz2 ./project/        # create + bzip2 compress (smaller, slower)
+tar -cJf archive.tar.xz  ./project/        # create + xz compress (smallest, slowest)
+tar -cf  archive.tar     ./project/        # create, no compression
+
+# Extract archives
+tar -xzf archive.tar.gz                    # extract gzip
+tar -xjf archive.tar.bz2                   # extract bzip2
+tar -xJf archive.tar.xz                    # extract xz
+tar -xf  archive.tar                       # extract uncompressed
+
+# Extract to specific directory
+tar -xzf archive.tar.gz -C /opt/apps/
+
+# List contents without extracting
+tar -tzf archive.tar.gz                    # list gzip archive
+tar -tf  archive.tar                       # list uncompressed archive
+
+# Extract a single file
+tar -xzf archive.tar.gz project/config.yml
+```
+
+**Key flags:**
+
+| Flag | Description |
+| ---- | ----------- |
+| `-c` | Create archive |
+| `-x` | Extract archive |
+| `-t` | List contents |
+| `-z` | gzip compression |
+| `-j` | bzip2 compression |
+| `-J` | xz compression |
+| `-f FILE` | Archive filename |
+| `-C DIR` | Extract to directory |
+| `-v` | Verbose (list files) |
+
+### rsync — Efficient File Sync
+
+rsync transfers only the differences between source and destination. It is far more efficient than `cp` or `scp` for large directories or repeated syncs, because it compares file checksums and sizes and only sends what has changed.
+
+```bash
+# Local sync
+rsync -av ./src/ ./backup/          # sync src to backup (trailing slash = contents)
+
+# Remote sync (SSH)
+rsync -avz ./project/ alice@server.company.com:/opt/apps/project/
+
+# Dry run (preview what would change, no actual transfer)
+rsync -avzn ./project/ alice@server.company.com:/opt/apps/project/
+
+# Delete mirror (remove files in dest that no longer exist in src)
+rsync -avz --delete ./project/ alice@server.company.com:/opt/apps/project/  # ⚠️
+
+# Exclude patterns
+rsync -avz --exclude="node_modules/" --exclude=".git/" \
+  ./project/ alice@server.company.com:/opt/apps/project/
+
+# Bandwidth limit (useful for large transfers over shared links)
+rsync -avz --bwlimit=5000 ./large-backup/ alice@server.company.com:/backups/
+```
+
+**Key flags:**
+
+| Flag | Description |
+| ---- | ----------- |
+| `-a` | Archive mode (recursive + preserve permissions, times, owner, group, symlinks) |
+| `-v` | Verbose |
+| `-z` | Compress during transfer |
+| `-n` | Dry run (no changes) |
+| `--delete` | Remove destination files not in source |
+| `--exclude=PATTERN` | Skip matching files |
+| `--bwlimit=KBPS` | Limit bandwidth |
+| `--progress` | Show per-file progress |
+
+> ⚠️ `--delete` removes files from the destination that don't exist in the source. Always do a dry run (`-n`) first on production systems.
+
+---
+
+## 🌍 Real-World Examples
+
+### 1. Find and clean up old log files
+
+> Your `/var/log` partition is filling up and you want to find and remove log files older than 30 days.
+
+```bash
+# Preview what would be deleted

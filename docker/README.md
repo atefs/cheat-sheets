@@ -266,3 +266,115 @@ USER appuser
 EXPOSE 3000
 
 # HEALTHCHECK tells Docker how to test if the container is healthy
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:3000/health || exit 1
+
+# Use exec form (array) — not shell form (string)
+# Exec form: signals reach the process directly
+# Shell form: signals go to sh, not your process
+CMD ["node", "server.js"]
+```
+
+### Multi-Stage Build (keep production images small)
+
+```dockerfile
+# Stage 1: Build
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# Stage 2: Production image (only the compiled output)
+FROM nginx:alpine AS production
+# Copy only the built output from stage 1
+COPY --from=builder /app/dist /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+
+# Result: production image contains only nginx + dist files
+# No node_modules, no source code, no dev dependencies
+```
+
+### Dockerfile Instruction Reference
+
+| Instruction | Purpose |
+| ----------- | ------- |
+| `FROM image:tag` | Base image (every Dockerfile starts here) |
+| `WORKDIR /path` | Set working directory (and create it) |
+| `COPY src dest` | Copy files from build context into image |
+| `RUN command` | Execute command and commit result as a new layer |
+| `ENV KEY=value` | Set environment variable (persists in container) |
+| `ARG NAME=default` | Build-time variable (not in final image) |
+| `EXPOSE port` | Document that the container listens on this port |
+| `VOLUME ["/path"]` | Declare a mount point for volumes |
+| `USER name` | Set user for subsequent RUN/CMD/ENTRYPOINT |
+| `ENTRYPOINT ["cmd"]` | Main executable (exec form recommended) |
+| `CMD ["arg"]` | Default arguments for ENTRYPOINT (or default command) |
+| `HEALTHCHECK ...` | Command to test container health |
+| `LABEL key=value` | Add metadata (author, version, etc.) |
+
+### CMD vs ENTRYPOINT
+
+```dockerfile
+# CMD alone — easily overridden at runtime:
+CMD ["nginx", "-g", "daemon off;"]
+# docker run myimage              → runs nginx
+# docker run myimage /bin/sh      → overrides CMD, runs /bin/sh
+
+# ENTRYPOINT alone — always runs, args appended:
+ENTRYPOINT ["nginx"]
+# docker run myimage -g "daemon off;"   → nginx -g "daemon off;"
+
+# ENTRYPOINT + CMD — ENTRYPOINT is the executable, CMD is default args:
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["postgres"]
+# docker run myimage               → docker-entrypoint.sh postgres
+# docker run myimage pg_dump       → docker-entrypoint.sh pg_dump
+```
+
+> 💡 **Use ENTRYPOINT for the main process, CMD for default arguments.** This pattern is used by all official Docker Hub images (postgres, redis, nginx, etc.).
+
+---
+
+## 🚀 Real-World Examples
+
+### 1. Containerize a Node.js Application
+
+> You have a Node.js app and want to build and run it in Docker.
+
+```bash
+# Create a Dockerfile (see best-practice template above)
+# Then build:
+docker build -t myapp:1.0 .
+
+# Test locally
+docker run -d --name myapp -p 3000:3000 myapp:1.0
+
+# Verify it's running
+curl http://localhost:3000/health
+
+# View logs
+docker logs -f myapp
+
+# Tag and push to registry
+docker tag myapp:1.0 registry.company.com/myapp:1.0
+docker push registry.company.com/myapp:1.0
+```
+
+### 2. Run a Local Postgres Database with Persistent Data
+
+> You need a Postgres instance for local development that persists data between container restarts.
+
+```bash
+# Create a named volume so data persists
+docker volume create pgdata
+
+# Run Postgres
+docker run -d \
+  --name postgres-dev \
+  -e POSTGRES_DB=myapp \
+  -e POSTGRES_USER=alice \
+  -e POSTGRES_PASSWORD=localdev \
+  -v pgdata:/var/lib/postgresql/data \

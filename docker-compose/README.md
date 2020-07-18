@@ -159,3 +159,70 @@ docker compose stop                  # stop containers (keeps them, no removal)
 docker compose restart web           # restart a specific service
 
 # Logs
+docker compose logs                  # all services
+docker compose logs -f web           # follow a specific service
+docker compose logs --tail=50 db     # last 50 lines from db service
+
+# Run commands
+docker compose exec web sh           # interactive shell in running service
+docker compose run --rm web npm test # one-off command in new container (auto-removes)
+docker compose run --rm web npm install some-package
+
+# Scale
+docker compose up -d --scale web=3  # run 3 instances of web service
+
+# Status and inspection
+docker compose ps                    # list containers + their state
+docker compose top                   # processes running inside each container
+docker compose config                # print merged/resolved config (debug overrides)
+
+# Pull and push
+docker compose pull                  # pull latest versions of all images
+docker compose push                  # push built images to registry
+```
+
+---
+
+## 🚀 Real-World Examples
+
+### 1. Full-Stack Web App: Node.js + Postgres + Redis
+
+> You want to bring up all three services with a single command for local development.
+
+```bash
+# Start everything (first time — builds the web image)
+docker compose up --build
+
+# Once images are built, subsequent starts are faster
+docker compose up -d
+
+# Check everything is healthy
+docker compose ps
+
+# Follow the web service logs
+docker compose logs -f web
+
+# Connect to the database directly for debugging
+docker compose exec db psql -U alice -d myapp
+
+# Run a one-off migration
+docker compose run --rm web npm run db:migrate
+
+# Tear down (keep volumes — data preserved)
+docker compose down
+
+# Tear down including all data ⚠️
+docker compose down -v
+```
+
+### 2. Override Files: Dev vs Prod Configuration
+
+> You want hot-reload and exposed debug ports in dev, but not in production.
+
+Directory layout:
+
+```
+myapp/
+├── compose.yml           # base config (committed)
+├── compose.override.yml  # dev overrides (committed or git-ignored)
+├── compose.prod.yml      # production overrides (committed)

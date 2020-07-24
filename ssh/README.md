@@ -262,3 +262,114 @@ ssh -J alice@bastion.company.com,alice@relay.internal alice@target.internal
 # Host internal
 #   ProxyJump alice@bastion.company.com
 ```
+
+---
+
+## ⚙️ SSH Config File
+
+The `~/.ssh/config` file lets you define aliases, defaults, and per-host settings so you never have to type long flags again.
+
+**Config file location by platform:**
+
+| Platform | Path |
+| -------- | ---- |
+| macOS / Linux | `~/.ssh/config` — set permissions with `chmod 600 ~/.ssh/config` |
+| Windows | `%USERPROFILE%\.ssh\config` — fix ACLs: `icacls config /inheritance:r /grant:r "%USERNAME%:R"` |
+
+```
+# ~/.ssh/config  (macOS/Linux)  or  %USERPROFILE%\.ssh\config  (Windows)
+# Permissions: chmod 600 ~/.ssh/config
+
+# ── Global Defaults ────────────────────────────────────────────────────────
+Host *
+  AddKeysToAgent yes             # automatically add keys to agent on first use
+  IdentityFile ~/.ssh/id_ed25519 # default key to try
+  ServerAliveInterval 60         # send keepalive every 60s
+  ServerAliveCountMax 3          # disconnect after 3 missed keepalives
+  ControlMaster auto             # connection multiplexing (share one TCP connection)
+  ControlPath ~/.ssh/cm/%r@%h:%p # socket path for multiplexing
+  ControlPersist 10m             # keep master connection alive for 10 minutes
+
+# ── Work Server ────────────────────────────────────────────────────────────
+Host work
+  HostName 203.0.113.50          # actual IP or hostname
+  User alice
+  Port 22
+  IdentityFile ~/.ssh/work_ed25519
+
+# ── Bastion + Internal Host ────────────────────────────────────────────────
+Host bastion
+  HostName bastion.company.com
+  User alice
+  ForwardAgent yes               # forward agent to bastion (needed for ProxyJump)
+
+Host internal
+  HostName 10.0.1.50
+  User alice
+  ProxyJump alice@bastion.company.com  # jump through bastion
+
+# ── GitHub ─────────────────────────────────────────────────────────────────
+Host github.com
+  User git
+  IdentityFile ~/.ssh/id_ed25519
+  AddKeysToAgent yes
+```
+
+---
+
+## 🖥️ Server Configuration
+
+### Recommended `sshd_config` for Production
+
+```conf
+# /etc/ssh/sshd_config
+# After editing: sudo systemctl restart sshd
+
+# ── Authentication ──────────────────────────────────────────────────────────
+PasswordAuthentication no          # disable password login (keys only)
+PermitRootLogin no                 # never allow root login
+PubkeyAuthentication yes           # enable key-based auth
+AuthorizedKeysFile .ssh/authorized_keys  # standard location
+ChallengeResponseAuthentication no # disable PAM challenge/response
+
+# ── Protocol ────────────────────────────────────────────────────────────────
+Port 22                            # consider changing to non-standard port
+Protocol 2                         # SSHv2 only
+AddressFamily inet                 # IPv4 only (or 'any' for dual-stack)
+
+# ── Session Limits ──────────────────────────────────────────────────────────
+LoginGraceTime 30                  # seconds to authenticate before disconnect
+MaxAuthTries 3                     # attempts before connection close
+MaxSessions 10                     # max sessions per connection
+
+# ── Idle Timeout ────────────────────────────────────────────────────────────
+ClientAliveInterval 300            # send keepalive every 5 minutes
+ClientAliveCountMax 2              # disconnect after 2 missed keepalives (10 min idle)
+
+# ── Features ────────────────────────────────────────────────────────────────
+X11Forwarding no                   # disable X11 forwarding unless needed
+AllowTcpForwarding yes             # enable port forwarding
+GatewayPorts no                    # prevent remote-forwarded ports binding to 0.0.0.0
+
+# ── AllowUsers ──────────────────────────────────────────────────────────────
+AllowUsers alice bob deploy         # whitelist specific users
+```
+
+---
+
+## ✅ Best Practices
+
+- ✅ Use **ed25519** keys — smaller, faster, and more secure than RSA 2048
+- ✅ **Always set a passphrase** on your private key; use `ssh-agent` so you only type it once per session
+- ✅ Use `~/.ssh/config` aliases — stop typing IPs and flags for every connection
+- ✅ Disable password authentication on servers (`PasswordAuthentication no` in `sshd_config`)
+- ✅ Run `fail2ban` or `sshguard` on internet-facing servers to block brute-force attempts
+- ✅ Set `chmod 700 ~/.ssh` and `chmod 600 ~/.ssh/*` — SSH ignores keys with loose permissions
+- ✅ Use `ssh-copy-id` to install keys — it handles permissions correctly
+- ⚠️ **Never share your private key** (`id_ed25519`) — only distribute `id_ed25519.pub`
+- ⚠️ **Agent forwarding** (`-A` / `ForwardAgent yes`) trusts the remote host with your keys — only use on servers you control
+- ⚠️ **`StrictHostKeyChecking no`** disables the `known_hosts` check — never use in production; it defeats MITM protection
+
+---
+
+## 🚀 Real-World Examples

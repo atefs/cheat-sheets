@@ -197,3 +197,86 @@ awk '!/^#/' config.txt                        # exclude comment lines
 email="alice@company.com"
 if echo "$email" | grep -qE "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"; then
   echo "Valid email"
+else
+  echo "Invalid email"
+fi
+```
+
+### 2. Extract all IP addresses from a log file
+
+```bash
+# Extract all IPv4 addresses
+grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" /var/log/nginx/access.log | sort | uniq -c | sort -rn
+
+# Using PCRE for stricter match (0-255 per octet)
+grep -oP "(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" access.log
+```
+
+### 3. Regex in Python
+
+```python
+import re
+
+text = "Order #1042 placed by alice@company.com on 2024-01-15"
+
+# re.search — find first match anywhere in string
+match = re.search(r"\d{4}-\d{2}-\d{2}", text)
+if match:
+    print(match.group())           # 2024-01-15
+
+# re.findall — return all matches as a list
+emails = re.findall(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}", text)
+print(emails)                      # ['alice@company.com']
+
+# re.sub — substitute matches
+clean = re.sub(r"\s+", " ", "too   many    spaces")
+print(clean)                       # 'too many spaces'
+
+# Named capture groups
+pattern = r"Order #(?P<order_id>\d+).*by (?P<email>\S+@\S+)"
+m = re.match(pattern, text)
+if m:
+    print(m.group("order_id"))     # 1042
+    print(m.group("email"))        # alice@company.com
+
+# Compiled pattern (reuse for performance)
+date_re = re.compile(r"\d{4}-\d{2}-\d{2}")
+dates = date_re.findall("Events on 2024-01-15 and 2024-02-20")
+```
+
+### 4. Regex in JavaScript
+
+```javascript
+const text = "Order placed by alice@company.com on 2024-01-15";
+
+// Test if pattern matches
+const hasDate = /\d{4}-\d{2}-\d{2}/.test(text);
+console.log(hasDate);              // true
+
+// Extract first match
+const dateMatch = text.match(/\d{4}-\d{2}-\d{2}/);
+console.log(dateMatch[0]);         // "2024-01-15"
+
+// Extract all matches (g flag)
+const allDates = "2024-01-15 and 2024-02-20".match(/\d{4}-\d{2}-\d{2}/g);
+console.log(allDates);             // ["2024-01-15", "2024-02-20"]
+
+// Replace
+const slug = "Hello World! How Are You?".replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+console.log(slug);                 // "hello-world-how-are-you"
+
+// Named capture groups (ES2018+)
+const re = /(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})/;
+const m = "2024-01-15".match(re);
+console.log(m.groups.year);        // "2024"
+
+// matchAll — all matches with capture groups
+const str = "cat=5, dog=12, bird=3";
+for (const m of str.matchAll(/(\w+)=(\d+)/g)) {
+    console.log(`${m[1]}: ${m[2]}`);
+}
+// cat: 5 / dog: 12 / bird: 3
+```
+
+### 5. Lookahead and lookbehind in practice
+

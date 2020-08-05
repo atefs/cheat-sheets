@@ -159,3 +159,70 @@ brew tap
 
 # Remove a tap (and all its formulae)
 brew untap some/tap
+```
+
+### Services (processes managed by Homebrew)
+
+```bash
+brew services list                        # list all services and their status
+brew services start postgresql@16         # start a service (and enable at login)
+brew services stop postgresql@16          # stop a service
+brew services restart nginx               # restart
+brew services run postgresql@16           # start once (don't enable at login)
+```
+
+---
+
+## 📦 Brewfile — Reproducible Setup
+
+A `Brewfile` is a declarative manifest of all your Homebrew packages, casks, and taps. Commit it to your dotfiles repository to recreate your entire setup on a new machine with a single command.
+
+```ruby
+# Brewfile — commit to your dotfiles repo for reproducible setup
+
+# ── Taps ──────────────────────────────────────────────────────────────────
+tap "homebrew/cask-fonts"
+tap "homebrew/cask-versions"
+tap "hashicorp/tap"
+
+# ── Development tools ─────────────────────────────────────────────────────
+brew "git"
+brew "neovim"
+brew "tmux"
+brew "fzf"                          # fuzzy finder
+brew "ripgrep"                      # fast grep (rg)
+brew "jq"                           # JSON processor
+brew "httpie"                       # user-friendly curl alternative
+brew "gh"                           # GitHub CLI
+brew "lazygit"                      # terminal UI for git
+
+# ── Languages & runtimes ──────────────────────────────────────────────────
+brew "node"
+brew "python"
+brew "go"
+brew "rustup"
+
+# ── DevOps ────────────────────────────────────────────────────────────────
+brew "hashicorp/tap/terraform"
+brew "kubectl"
+brew "helm"
+brew "awscli"
+brew "docker-compose"               # standalone Compose for Linux
+
+# ── Shell enhancements ────────────────────────────────────────────────────
+brew "zsh-syntax-highlighting"
+brew "zsh-autosuggestions"
+brew "starship"                     # cross-shell prompt
+
+# ── GUI Apps (casks) ──────────────────────────────────────────────────────
+cask "iterm2"
+cask "visual-studio-code"
+cask "docker"
+cask "postman"
+cask "rectangle"                    # window manager
+cask "raycast"                      # Spotlight replacement
+
+# ── Fonts ─────────────────────────────────────────────────────────────────
+cask "font-jetbrains-mono-nerd-font"
+cask "font-fira-code-nerd-font"
+```

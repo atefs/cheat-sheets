@@ -254,3 +254,111 @@ Create the S3 bucket and DynamoDB table (do this once manually or with a bootstr
 # S3 bucket
 aws s3api create-bucket \
   --bucket myapp-terraform-state \
+  --region us-east-1
+
+aws s3api put-bucket-versioning \
+  --bucket myapp-terraform-state \
+  --versioning-configuration Status=Enabled
+
+# DynamoDB table (LockID is the required partition key name)
+aws dynamodb create-table \
+  --table-name myapp-terraform-locks \
+  --attribute-definitions AttributeName=LockID,AttributeType=S \
+  --key-schema AttributeName=LockID,KeyType=HASH \
+  --billing-mode PAY_PER_REQUEST \
+  --region us-east-1
+```
+
+### Module Structure
+
+Standard folder layout for a reusable module:
+
+```
+modules/
+└── ec2-instance/
+    ├── main.tf        # resources
+    ├── variables.tf   # input variable declarations
+    ├── outputs.tf     # output value declarations
+    └── versions.tf    # required_providers and terraform version constraint
+```
+
+Calling a module:
+
+```hcl
+# main.tf (root configuration)
+module "web_server" {
+  source = "./modules/ec2-instance"   # local module
+
+  # Or from Terraform Registry:
+  # source  = "terraform-aws-modules/ec2-instance/aws"
+  # version = "~> 5.0"
+
+  # Pass values to the module's variables
+  instance_type = "t3.small"
+  ami_id        = data.aws_ami.ubuntu.id
+  name          = "${local.prefix}-web"
+  tags          = local.tags
+}
+
+# Reference module outputs
+output "web_server_ip" {
+  value = module.web_server.public_ip
+}
+```
+
+---
+
+## 💡 Real-World Examples
+
+### 1. Provision an EC2 instance with a security group
+
+```hcl
+# ec2.tf
+resource "aws_security_group" "web" {
+  name        = "myapp-prod-web-sg"
+  description = "Allow HTTP and SSH"
+  vpc_id      = data.aws_vpc.default.id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["203.0.113.0/24"]  # your office IP range
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_instance" "web" {
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = "t3.small"
+  vpc_security_group_ids = [aws_security_group.web.id]
+  key_name               = "myapp-prod"
+
+  tags = {
+    Name        = "myapp-prod-web"
+    Environment = "prod"
+  }
+}
+```
+
+```bash
+terraform init
+terraform plan -out=tfplan
+terraform apply tfplan
+```
+
+### 2. Remote state in S3 with DynamoDB locking
+

@@ -206,3 +206,90 @@ Pin-Priority: -1
 Alternative: use `apt-mark` for simpler holds:
 
 ```bash
+sudo apt-mark hold nginx              # prevent nginx from being upgraded
+sudo apt-mark unhold nginx            # remove the hold
+sudo apt-mark showhold                # list all held packages
+```
+
+Priority values: `> 1000` = install even if downgrade; `1000` = install unless downgrade; `990` = default installed; `500` = default; `100` = backport; `< 0` = never install.
+
+---
+
+## Unattended Upgrades — Automatic Security Updates
+
+```bash
+# Install
+sudo apt install unattended-upgrades
+
+# Enable (also creates /etc/apt/apt.conf.d/20auto-upgrades)
+sudo dpkg-reconfigure --priority=low unattended-upgrades
+```
+
+Key configuration file `/etc/apt/apt.conf.d/50unattended-upgrades`:
+
+```
+Unattended-Upgrade::Allowed-Origins {
+    "${distro_id}:${distro_codename}-security";  // security updates only (default)
+    // "${distro_id}:${distro_codename}-updates"; // uncomment for all updates
+};
+
+Unattended-Upgrade::AutoFixInterruptedDpkg "true";
+Unattended-Upgrade::Remove-Unused-Dependencies "true";
+Unattended-Upgrade::Automatic-Reboot "false";          // set true to auto-reboot
+Unattended-Upgrade::Automatic-Reboot-Time "02:00";
+```
+
+```bash
+# Test (dry run — no changes)
+sudo unattended-upgrades --dry-run --debug
+
+# Check logs
+cat /var/log/unattended-upgrades/unattended-upgrades.log
+```
+
+---
+
+## 💡 Real-World Examples
+
+### 1. Set up a fresh Ubuntu server
+
+Standard first steps on a new Ubuntu server: update, install essentials, enable unattended upgrades.
+
+```bash
+# Update package index and upgrade everything
+sudo apt update && sudo apt upgrade -y
+
+# Install essential packages
+sudo apt install -y --no-install-recommends \
+  curl \
+  wget \
+  git \
+  vim \
+  htop \
+  unzip \
+  ca-certificates \
+  gnupg \
+  ufw
+
+# Enable automatic security updates
+sudo apt install -y unattended-upgrades
+sudo dpkg-reconfigure --priority=low unattended-upgrades
+
+# Clean up
+sudo apt autoremove -y && sudo apt clean
+```
+
+### 2. Pin a package version to prevent it from being upgraded
+
+Your application requires nginx 1.24.x and you don't want `apt upgrade` to bump it to 1.26.
+
+```bash
+# Check the currently installed version
+dpkg -l nginx | awk '/^ii/{print $3}'
+
+# Method 1: apt-mark (simplest)
+sudo apt-mark hold nginx
+sudo apt-mark showhold            # verify
+
+# Method 2: preferences.d (more control)
+cat <<'EOF' | sudo tee /etc/apt/preferences.d/nginx

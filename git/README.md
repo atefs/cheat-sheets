@@ -493,3 +493,143 @@ git cherry-pick --abort       # to cancel and return to previous state
 [pull]
   rebase = true               ; rebase on pull instead of merge
 
+[push]
+  autoSetupRemote = true      ; git push works without -u on first push
+
+[alias]
+  lg = log --oneline --graph --all --decorate
+  st = status -sb
+  co = switch
+
+[init]
+  defaultBranch = main
+```
+
+### .gitignore Patterns
+
+```bash
+# Dependencies
+node_modules/
+
+# Environment — never commit secrets
+.env
+
+# Build output
+dist/
+*.log
+
+# macOS metadata
+.DS_Store
+
+# Negation — track a specific file inside an ignored directory
+!dist/.gitkeep
+
+# Apply a global gitignore to every repo on your machine
+git config --global core.excludesFile ~/.gitignore_global
+```
+
+> ✅ Commit a `.gitignore` at the root of every project. Use [gitignore.io](https://www.toptal.com/developers/gitignore) to generate language/framework-specific templates.
+
+> ❌ Never commit `.env`, credentials, or API keys. If you do accidentally, the secret should be considered compromised and rotated immediately — removing it from history is difficult and doesn't guarantee safety.
+
+### .gitattributes
+
+```
+# Normalize line endings across platforms
+# text=auto: Git decides; LF in repo, native endings on checkout
+* text=auto
+
+# Force LF for files that must not have CRLF (shell scripts, Makefiles, Docker)
+*.sh   text eol=lf
+*.bash text eol=lf
+Makefile text eol=lf
+Dockerfile text eol=lf
+
+# Force CRLF for Windows-only files
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# Mark as binary (no line-ending conversion or diff)
+*.png binary
+*.jpg binary
+*.pdf binary
+```
+
+> 💡 **Windows users:** set `core.autocrlf=true` in `~/.gitconfig` so Git converts CRLF→LF on commit and LF→CRLF on checkout. Combined with `* text=auto` in `.gitattributes`, this ensures Windows developers get CRLF files locally while the repo stores LF only.
+
+---
+
+## 💡 Pro Tips
+
+> 💡 **Use `--force-with-lease` instead of `--force`**
+> `--force` overwrites whatever is on the remote. `--force-with-lease` fails if someone else pushed since your last fetch — protecting against accidentally overwriting teammates' work.
+>
+> ```bash
+> git push origin feature/login --force-with-lease
+> ```
+
+> 💡 **Stage hunks, not files — `git add -p`**
+> Instead of staging entire files, review and stage individual changes. This leads to cleaner, more focused commits and helps you catch debug code before it is committed.
+>
+> ```bash
+> git add -p
+> ```
+
+> 💡 **Use Conventional Commits for machine-readable history**
+> Format: `type(scope): description`. Types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`.
+> This enables automated changelogs with tools like `conventional-changelog` and communicates intent clearly to reviewers.
+
+> 💡 **`git bisect` to hunt down regressions**
+> Binary search through commits to find which one introduced a bug.
+>
+> ```bash
+> git bisect start
+> git bisect bad                      # current commit is broken
+> git bisect good v1.2.0             # this version was fine
+> # git will checkout commits for you to test
+> git bisect good                    # if this commit is fine
+> git bisect bad                     # if this commit is broken
+> git bisect reset                   # restore HEAD when done
+> ```
+
+> 💡 **`git worktree` — multiple branches checked out simultaneously**
+> Check out a branch in a separate directory without stashing or switching. Useful for hotfixes while you have work in progress.
+>
+> ```bash
+> git worktree add ../hotfix-branch hotfix/critical-bug
+> cd ../hotfix-branch               # work there independently
+> git worktree remove ../hotfix-branch
+> ```
+
+> 💡 **`git reflog` is your safety net**
+> Every movement of HEAD is recorded in the reflog, including resets, rebases, and branch deletions. If you think you have lost commits, `git reflog` almost always has what you need.
+
+> ❌ **Never rebase shared/public branches**
+> Rebasing rewrites commit SHAs. If teammates have based work on those commits, their history diverges and you create a painful merge situation. Only rebase local, unshared branches.
+
+> ⚠️ **`git reset --hard` discards uncommitted changes permanently**
+> There is no undo for changes that were never committed. Use `git stash` if you might want them back. After `reset --hard`, changes in the working directory are gone.
+
+---
+
+## 🔍 Troubleshooting
+
+| Problem | Likely Cause | Fix |
+| ------- | ------------ | --- |
+| `fatal: not a git repository` | Not inside a git repo | `git init` or `cd` to correct directory |
+| Detached HEAD state | Checked out a commit SHA directly | `git switch main` |
+| Merge conflicts after pull | Local and remote history diverged | Resolve conflicts, `git add`, `git commit` |
+| `push` rejected (non-fast-forward) | Remote has commits you don't have locally | `git pull --rebase origin main` first |
+| Accidentally committed to main | Committed instead of feature branch | `git reset --soft HEAD~1`, then switch to feature branch and recommit |
+| Lost commits after `reset --hard` | Commits not pushed yet | `git reflog`, find SHA, `git switch -c recovery SHA` |
+
+---
+
+## 📚 Resources
+
+- [git-scm.com Official Book (Pro Git)](https://git-scm.com/book/en/v2) — Free, comprehensive, the definitive reference
+- [git-scm.com Reference](https://git-scm.com/docs) — Full man-page docs online
+- [Oh Shit, Git!?!](https://ohshitgit.com/) — Plain-English fixes for common mistakes
+- [Conventional Commits](https://www.conventionalcommits.org/) — Commit message specification
+- [Learn Git Branching](https://learngitbranching.js.org/) — Interactive visual tutorial

@@ -336,3 +336,99 @@ You want to rename a function across the whole file but verify each replacement.
 "   l  — replace this one and quit
 ```
 
+### 3. Use Marks to Jump Between Two Distant Locations
+
+You are editing two sections far apart in a large file.
+
+```vim
+" At the first location, set mark a
+ma
+
+" Navigate to the second location, set mark b
+mb
+
+" Jump back and forth instantly
+'a    " jump to line of mark a (first non-blank)
+'b    " jump to line of mark b
+
+" Jump to the exact cursor position (not just line start)
+`a
+`b
+```
+
+> 💡 Use uppercase marks (`mA`, `mB`) to jump across files. `'A` will open the file and jump to the mark, even if that file is not currently open.
+
+### 4. Yank To and From System Clipboard
+
+You want to copy text from Vim and paste it into another app (or vice versa).
+
+```vim
+" Copy a line to system clipboard (requires +clipboard build)
+"+yy
+
+" Copy a paragraph to system clipboard
+"+yap
+
+" Paste from system clipboard
+"+p
+
+" Check if clipboard is available
+:echo has('clipboard')   " 1 = yes, 0 = no
+
+" In your vimrc/init.lua, make clipboard the default register (all yank/paste uses system clipboard):
+set clipboard=unnamedplus         " Vimscript
+" vim.opt.clipboard = "unnamedplus"  -- Lua (init.lua)
+```
+
+**Clipboard setup by platform:**
+
+| Platform | Requirement | Notes |
+| -------- | ----------- | ----- |
+| macOS | `brew install neovim` (includes clipboard) | `"+` and `"*` both work |
+| Linux (X11) | `sudo apt install xclip` or `xsel` | `"+` = clipboard, `"*` = primary selection |
+| Linux (Wayland) | `sudo apt install wl-clipboard` | `"+` works via `wl-copy` |
+| Windows (gVim/Neovim native) | Included in installer | `"+` and `"*` both work |
+| Windows (WSL + Neovim) | Download [win32yank](https://github.com/equalsraf/win32yank), add to WSL `$PATH` | `"+` routes through `win32yank.exe` |
+
+> 💡 If `has('clipboard')` returns 0: on macOS use `brew install neovim`; on Linux (X11) install `xclip` or `vim-gtk3`; on Linux (Wayland) install `wl-clipboard`; on Windows/WSL add `win32yank.exe` to your WSL PATH.
+
+---
+
+## 💡 Pro Tips
+
+> 💡 **The dot operator is your best friend**
+> After any change, `.` repeats it. Change a word with `cw`, type the replacement, press `Esc` — now `.` repeats that change on the next word. Combine with `n` to find the next match and `.` to replace it.
+
+> 💡 **Use `*` to search the word under cursor**
+> Place the cursor on a word and press `*` to immediately search forward for all occurrences. Combine with `cgn` (change next match) + `.` for a powerful multi-cursor-style substitute without a plugin.
+
+> 💡 **`ci"` and friends are the fastest edit pattern**
+> `ci"` (change inside quotes) immediately deletes the content of the nearest quoted string and enters Insert mode. Works with `()`, `{}`, `[]`, and any delimiter. `ca"` includes the delimiters themselves.
+
+> 💡 **`q:` opens the command history window**
+> Press `q:` in Normal mode to see your full `:` command history in a navigable buffer. Move to any line and press `Enter` to re-run it. Press `Ctrl-c` or `:q` to close.
+
+> 💡 **`:g/pattern/command` is a powerful line filter**
+> `:g/TODO/d` deletes every line containing TODO. `:g/error/y A` yanks every matching line into register `a` (accumulating). `:g/^$/d` removes all blank lines. This unlocks complex bulk edits without scripting.
+
+> ❌ **Don't navigate with arrow keys in Insert mode**
+> It works, but it breaks your flow and trains the wrong muscle memory. Exit to Normal with `Esc` (or `Ctrl-[`), navigate, then re-enter Insert mode. This is faster once internalized.
+
+> ⚠️ **`:q!` discards all unsaved changes permanently**
+> Unlike most editors, Vim will not prompt you again after `:q!`. Use `:w` first if you want to keep changes, or `:wqa` to save-and-quit all open buffers at once.
+
+---
+
+## 🚀 Going Further
+
+> 💡 **Want more?** See [advanced.md](./advanced.md) for: macros in depth, registers, visual block mode, `.vimrc` / `init.lua` configuration, and Neovim-specific features (LSP, `init.lua`, plugins).
+
+---
+
+## 📚 Resources
+
+- [Vim official documentation](https://vimdoc.sourceforge.net/) — Built-in `:help` is also excellent; try `:help motion.txt`
+- [vimtutor](https://www.openvim.com/) — Run `vimtutor` in your terminal for a 30-minute interactive lesson
+- [Practical Vim by Drew Neil](https://pragprog.com/titles/dnvim2/practical-vim-second-edition/) — The best book on Vim
+- [vim-adventures.com](https://vim-adventures.com/) — Game-based learning of Vim motions
+- [Neovim documentation](https://neovim.io/doc/) — For Neovim-specific features

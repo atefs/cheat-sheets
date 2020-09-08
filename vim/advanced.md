@@ -380,3 +380,111 @@ if not vim.loop.fs_stat(lazypath) then
     "git", "clone", "--filter=blob:none",
     "https://github.com/folke/lazy.nvim.git",
     "--branch=stable", lazypath,
+  })
+end
+vim.opt.rtp:prepend(lazypath)
+
+-- Load plugins
+require("lazy").setup({
+  { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
+  { "neovim/nvim-lspconfig" },
+  { "hrsh7th/nvim-cmp" },
+  {
+    "nvim-telescope/telescope.nvim",
+    dependencies = { "nvim-lua/plenary.nvim" },
+  },
+  { "lewis6991/gitsigns.nvim" },
+  { "nvim-lualine/lualine.nvim" },
+  { "echasnovski/mini.nvim" },
+})
+```
+
+### Essential Plugins
+
+| Plugin | Purpose |
+| ------ | ------- |
+| `folke/lazy.nvim` | Plugin manager — lazy-loads plugins for fast startup |
+| `nvim-treesitter/nvim-treesitter` | Syntax highlighting and code navigation via AST |
+| `neovim/nvim-lspconfig` | Quickstart configs for Neovim's built-in LSP client |
+| `hrsh7th/nvim-cmp` | Completion engine with multiple source plugins |
+| `nvim-telescope/telescope.nvim` | Fuzzy finder for files, buffers, grep, git, and more |
+| `lewis6991/gitsigns.nvim` | Git blame, diff, and hunk navigation in the sign column |
+| `nvim-lualine/lualine.nvim` | Fast and configurable statusline written in Lua |
+| `echasnovski/mini.nvim` | Collection of small, independent modules (pairs, surround, etc.) |
+
+### LSP Setup
+
+Neovim has a built-in LSP client. `nvim-lspconfig` provides pre-configured setups for most language servers.
+
+```lua
+-- In your plugin spec or a separate lua/lsp.lua file:
+local lspconfig = require("lspconfig")
+
+-- TypeScript / JavaScript (install: npm install -g typescript-language-server)
+lspconfig.ts_ls.setup({})
+
+-- Python (install: pip install pyright)
+lspconfig.pyright.setup({})
+
+-- Go (install: go install golang.org/x/tools/gopls@latest)
+lspconfig.gopls.setup({})
+
+-- Key mappings applied when LSP attaches to a buffer
+vim.api.nvim_create_autocmd("LspAttach", {
+  callback = function(args)
+    local map = vim.keymap.set
+    local opts = { buffer = args.buf }
+    map("n", "gd",         vim.lsp.buf.definition,    opts)  -- go to definition
+    map("n", "K",          vim.lsp.buf.hover,          opts)  -- hover docs
+    map("n", "<leader>rn", vim.lsp.buf.rename,         opts)  -- rename symbol
+    map("n", "<leader>ca", vim.lsp.buf.code_action,    opts)  -- code actions
+    map("n", "gr",         vim.lsp.buf.references,     opts)  -- list references
+  end,
+})
+```
+
+> 💡 Language servers must be installed separately from Neovim. Use `mason.nvim` (`williamboman/mason.nvim`) to install and manage language servers, linters, and formatters from inside Neovim with `:MasonInstall pyright`.
+
+---
+
+## 💡 Pro Tips
+
+> 💡 **Repeat substitutions with `&`**
+> After running `:%s/foo/bar/g`, press `&` on any line to repeat the last substitution on just that line. Use `g&` to repeat it across the whole file. Useful when you want to re-apply a substitution after making manual edits.
+
+> 💡 **`gn` — the motion for the last search pattern**
+> `gn` selects the next match of the last search. `cgn` changes the next search match. After one change, `.` repeats it on the subsequent match — this is a composable, composable find-and-replace without running `:%s`.
+
+> 💡 **Edit macros stored in registers**
+> Paste a register into a buffer, edit it as plain text, then yank it back. Far easier than re-recording from scratch.
+>
+> ```vim
+> " Paste register a as a new line to inspect and edit
+> :put a
+>
+> " Edit the text, then yank the corrected line back into register a
+> "ayy
+> ```
+
+> 💡 **`:norm` applies Normal mode commands to a range**
+> `:5,10norm A;` appends a semicolon to lines 5–10. `:%norm I// ` prepends `// ` to every line. Combine with `:g` for filtered application.
+>
+> ```vim
+> " Append semicolons to lines 1–20
+> :1,20norm A;
+>
+> " Comment out every line containing 'debug'
+> :g/debug/norm I// 
+> ```
+
+> ❌ **Don't use arrow keys in Normal mode**
+> It works, but it trains the wrong muscle memory. `h/j/k/l` keep your hands on the home row and combine with counts (`5j` = down 5 lines, `12l` = right 12 characters). Navigating with counts is dramatically faster than holding arrow keys.
+
+---
+
+## 📚 Resources
+
+- [Neovim documentation](https://neovim.io/doc/user/) — Comprehensive Neovim-specific reference; also available via `:help`
+- [lazy.nvim README](https://github.com/folke/lazy.nvim) — Plugin manager documentation and configuration examples
+- [nvim-lspconfig server configurations](https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md) — LSP setup for every supported language
+- [Vimcasts](http://vimcasts.org/) — Free screencasts on advanced Vim techniques by Drew Neil

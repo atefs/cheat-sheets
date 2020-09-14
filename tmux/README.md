@@ -356,3 +356,105 @@ bind -r J resize-pane -D 5
 bind -r K resize-pane -U 5
 bind -r L resize-pane -R 5
 
+# ── Copy Mode ──────────────────────────────────────────────────────────────
+setw -g mode-keys vi                  # vi keys in copy mode
+bind -T copy-mode-vi v send -X begin-selection
+bind -T copy-mode-vi y send -X copy-selection-and-cancel
+bind -T copy-mode-vi C-v send -X rectangle-toggle
+
+# ── Clipboard Integration (pick one block for your platform) ────────────────
+# macOS
+bind -T copy-mode-vi y send -X copy-pipe-and-cancel "pbcopy"
+# Linux X11
+# bind -T copy-mode-vi y send -X copy-pipe-and-cancel "xclip -selection clipboard"
+# Linux Wayland
+# bind -T copy-mode-vi y send -X copy-pipe-and-cancel "wl-copy"
+# Windows/WSL2
+# bind -T copy-mode-vi y send -X copy-pipe-and-cancel "clip.exe"
+
+# ── Status Bar ─────────────────────────────────────────────────────────────
+set -g status-style bg=colour235,fg=colour136
+set -g status-left "#[fg=green,bold]#S #[fg=colour240]│ "
+set -g status-left-length 30
+set -g status-right "#[fg=yellow]%a %d %b  %H:%M"
+set -g window-status-current-style fg=colour166,bold
+setw -g window-status-format " #I:#W "
+setw -g window-status-current-format " #I:#W "
+
+# ── Reload Config ──────────────────────────────────────────────────────────
+bind r source-file ~/.tmux.conf \; display "Config reloaded!"
+```
+
+---
+
+## 🔌 Plugin Ecosystem
+
+tmux plugins are managed via [tpm (tmux Plugin Manager)](https://github.com/tmux-plugins/tpm).
+
+**Install tpm:**
+
+```bash
+git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+```
+
+Add to `~/.tmux.conf`:
+
+```bash
+# Plugin manager — must be at the bottom of .tmux.conf
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-sensible'
+
+# Persist sessions across reboots
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
+
+# Better copy/paste
+set -g @plugin 'tmux-plugins/tmux-yank'
+
+# Auto-save settings
+set -g @continuum-restore 'on'
+
+# Initialize tpm (must be last line)
+run '~/.tmux/plugins/tpm/tpm'
+```
+
+| Plugin | Purpose |
+| ------ | ------- |
+| `tpm` | Plugin manager — installs and updates all other plugins |
+| `tmux-resurrect` | Save and restore sessions across system reboots |
+| `tmux-continuum` | Automatic, periodic session saving (builds on tmux-resurrect) |
+| `tmux-yank` | Copy to system clipboard from copy mode; works on macOS, Linux, WSL |
+| `tmux-sensible` | Sensible default settings that everyone agrees on |
+
+Install plugins: `Prefix + I` (capital I) after editing `.tmux.conf`.
+
+---
+
+## 💡 Pro Tips
+
+> 💡 **Always name your sessions**
+> `tmux new -s work` instead of plain `tmux`. Unnamed sessions are just numbered and hard to reattach to. Names make `tmux ls` readable at a glance.
+
+> 💡 **Auto-attach on SSH login**
+> Add `tmux new-session -A -s main` to your `~/.bashrc` or `~/.zshrc` on remote servers. The `-A` flag attaches if the session exists, creates it if not.
+
+> 💡 **`Prefix + z` — instant zoom**
+> Zoom a pane to full-screen for focused work, then `Prefix + z` again to restore. Far faster than resizing panes manually.
+
+> 💡 **`Prefix + [` then `/` to search scrollback**
+> Enter copy mode and search backward through your terminal history. Press `n`/`N` to cycle matches. Useful when you forgot what a command output.
+
+> 💡 **`set -sg escape-time 0` is critical for Vim users**
+> Without it, pressing `Esc` in Vim has a noticeable delay because tmux waits to see if it's the start of an escape sequence. Set to 0 to eliminate the lag.
+
+> ❌ **Don't rely on unnamed or numbered sessions**
+> Running plain `tmux` creates a session named `0`, `1`, etc. Three sessions in and you have no idea what's running where. Always use `-s name`.
+
+---
+
+## 📚 Resources
+
+- [tmux GitHub wiki](https://github.com/tmux/tmux/wiki) — Official documentation and FAQ
+- [tmux Cheat Sheet by tmuxcheatsheet.com](https://tmuxcheatsheet.com/) — Quick reference
+- [The Tao of tmux](https://leanpub.com/the-tao-of-tmux/read) — Free online book, comprehensive guide
+- [tpm (tmux Plugin Manager)](https://github.com/tmux-plugins/tpm) — Plugin ecosystem entry point

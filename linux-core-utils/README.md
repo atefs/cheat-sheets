@@ -395,3 +395,116 @@ find ./config -name "*.bak" -delete
 
 > You have a CSV export and want all unique values from the "status" column (column 3).
 
+```bash
+# Skip header line, extract column 3, sort and deduplicate
+tail -n +2 orders.csv | cut -d, -f3 | sort | uniq
+
+# With counts
+tail -n +2 orders.csv | cut -d, -f3 | sort | uniq -c | sort -rn
+```
+
+### 5. Monitor live errors in a log file
+
+> You want to watch a log file in real-time and alert only on ERROR or FATAL entries.
+
+```bash
+# Follow log, filter for errors
+tail -f /var/log/app.log | grep --line-buffered -E "ERROR|FATAL"
+
+# Include 2 lines of context around each error
+tail -f /var/log/app.log | grep --line-buffered -A 2 "FATAL"
+
+# Count errors per minute (using awk for timestamps)
+tail -f /var/log/app.log | awk '/ERROR/ {count++} /:[0-9]{2} / {
+  if (count > 0) print strftime("%H:%M", systime()), count, "errors"
+  count=0
+}'
+```
+
+---
+
+## 🔗 Combining Tools
+
+Three advanced pipelines that demonstrate the power of chaining text tools.
+
+**Pipeline 1: Build a frequency table from any text**
+
+```bash
+# Most common words in a file
+cat README.md \
+  | tr '[:upper:]' '[:lower:]' \
+  | tr -cs '[:alpha:]' '\n' \
+  | sort \
+  | uniq -c \
+  | sort -rn \
+  | head -20
+```
+
+**Pipeline 2: Extract structured data from mixed-format logs**
+
+```bash
+# From: 2024-01-15 14:23:01 [ERROR] user_id=1042 action=login ip=203.0.113.5
+# Extract user_id and ip for all ERROR lines in the last 100 lines
+tail -100 /var/log/app.log \
+  | grep "ERROR" \
+  | sed 's/.*user_id=\([0-9]*\).*ip=\([^ ]*\).*/\1 \2/' \
+  | sort -k2 | uniq
+```
+
+**Pipeline 3: Compare installed packages between two servers**
+
+```bash
+# On server A:
+dpkg -l | awk '/^ii/{print $2}' | sort > /tmp/pkgs-a.txt
+
+# On server B:
+dpkg -l | awk '/^ii/{print $2}' | sort > /tmp/pkgs-b.txt
+
+# Show packages on A but not B:
+comm -23 /tmp/pkgs-a.txt /tmp/pkgs-b.txt
+
+# Show packages on B but not A:
+comm -13 /tmp/pkgs-a.txt /tmp/pkgs-b.txt
+```
+
+---
+
+## 💡 Pro Tips
+
+> 💡 **`grep -F` is dramatically faster for literal strings**
+> When you don't need regex, `-F` skips pattern compilation. On large log files, this can be 5-10x faster.
+
+> 💡 **`grep --line-buffered` when following a pipe**
+> By default, `grep` buffers output. When piped from `tail -f`, add `--line-buffered` so each matching line appears immediately.
+
+> 💡 **`awk` for anything `cut` can't do**
+> `cut` only works with a single delimiter and fixed fields. When your data is whitespace-delimited or has variable field counts, `awk` handles it cleanly. When both work, `cut` is simpler.
+
+> 💡 **`sed -i.bak` — always make a backup on first use**
+> When using `sed -i` on production files, use `-i.bak` to create a backup. Once you're confident the pattern is correct, delete the backups with `find . -name "*.bak" -delete`.
+
+> 💡 **Exit codes make pipelines scriptable**
+> `grep` returns 0 if it finds a match, 1 if not. Use this in conditionals:
+> ```bash
+> if grep -q "ERROR" app.log; then
+>   echo "Errors found in log"
+>   exit 1
+> fi
+> ```
+
+> ❌ **Don't parse `/etc/passwd` with `cut` when `awk` is cleaner**
+> `cut -d: -f1 /etc/passwd` works, but `awk -F: '{print $1}' /etc/passwd` is more readable when you need multiple fields. Choose `cut` for a single field, `awk` when you need conditions or multiple fields.
+
+---
+
+> 📁 **Next:** [file-system.md](./file-system.md) — `find`, `chmod`, `tar`, `rsync`, disk usage, and process management.
+
+---
+
+## 📚 Resources
+
+- [GNU Coreutils Manual](https://www.gnu.org/software/coreutils/manual/) — Definitive reference for all tools
+- [The AWK Programming Language](https://awk.readthedocs.io/) — Thorough awk documentation
+- [sed manual (GNU)](https://www.gnu.org/software/sed/manual/sed.html) — Complete sed reference
+- [Bash Hackers Wiki: Pipelines](https://wiki.bash-hackers.org/syntax/basicgrammar#pipelines) — Deep dive into pipe behavior
+- [commandlinefu.com](https://www.commandlinefu.com/) — Community-contributed one-liners

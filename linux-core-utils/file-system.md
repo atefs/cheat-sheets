@@ -349,3 +349,102 @@ rsync -avz --bwlimit=5000 ./large-backup/ alice@server.company.com:/backups/
 
 ```bash
 # Preview what would be deleted
+find /var/log -name "*.log" -mtime +30 -type f
+
+# Count them
+find /var/log -name "*.log" -mtime +30 -type f | wc -l
+
+# Delete them (verify preview first!)
+find /var/log -name "*.log" -mtime +30 -type f -delete  # ⚠️
+
+# For compressed logs too
+find /var/log -name "*.log.gz" -mtime +30 -delete  # ⚠️
+```
+
+### 2. Sync a project directory to a remote server
+
+> You want to deploy your built app to a server, excluding dev files.
+
+```bash
+# Build first
+npm run build
+
+# Dry run to verify
+rsync -avzn \
+  --exclude="node_modules/" \
+  --exclude=".env" \
+  --exclude=".git/" \
+  --delete \
+  ./dist/ alice@deploy.company.com:/opt/apps/myapp/
+
+# Deploy (remove -n when satisfied)
+rsync -avz \
+  --exclude="node_modules/" \
+  --exclude=".env" \
+  --exclude=".git/" \
+  --delete \
+  ./dist/ alice@deploy.company.com:/opt/apps/myapp/  # ⚠️
+```
+
+### 3. Archive and compress a project with tar
+
+> You want to create a timestamped backup of a project directory before a major refactor.
+
+```bash
+# Create timestamped archive
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+tar -czf "project-backup-${TIMESTAMP}.tar.gz" \
+  --exclude="./node_modules" \
+  --exclude="./.git" \
+  ./project/
+
+# Verify the archive
+tar -tzf "project-backup-${TIMESTAMP}.tar.gz" | head -20
+
+# Check its size
+ls -lh "project-backup-${TIMESTAMP}.tar.gz"
+
+# Extract to verify integrity
+mkdir -p /tmp/verify
+tar -xzf "project-backup-${TIMESTAMP}.tar.gz" -C /tmp/verify
+```
+
+---
+
+## 💡 Pro Tips
+
+> 💡 **`find . -exec` vs `find . | xargs`**
+> `-exec CMD {} \;` runs the command once per file (slow for many files). `find . | xargs CMD` batches multiple files into one command invocation (faster). For safety with spaces: `find . -print0 | xargs -0 CMD`.
+
+> 💡 **`rsync` trailing slash matters**
+> `rsync src/ dest/` syncs the *contents* of src into dest. `rsync src dest/` syncs the *directory itself* (creates dest/src). The trailing slash on source is the most common rsync mistake.
+
+> 💡 **`chmod -R` on a directory skips executable bit for files**
+> Use `find` to set permissions differently for files vs directories:
+> ```bash
+> find ./project -type d -exec chmod 755 {} \;
+> find ./project -type f -exec chmod 644 {} \;
+> ```
+
+> 💡 **`nohup` + `&` + log redirection**
+> ```bash
+> nohup ./long-job.sh > job.log 2>&1 &
+> echo "PID: $!"   # record the PID
+> ```
+> This survives terminal closure and captures all output.
+
+> ❌ **`rm -rf` with a variable can be catastrophic**
+> `rm -rf $DIR/` will expand to `rm -rf /` if `$DIR` is empty. Always quote and validate: `[[ -n "$DIR" ]] && rm -rf "$DIR/"`.
+
+---
+
+> 📝 **See also:** [README.md](./README.md) — Text processing utilities (grep, awk, sed, sort, etc.)
+
+---
+
+## 📚 Resources
+
+- [GNU Coreutils Manual](https://www.gnu.org/software/coreutils/manual/) — find, chmod, cp, and all core tools
+- [rsync man page](https://linux.die.net/man/1/rsync) — Complete rsync flag reference
+- [Explainshell](https://explainshell.com/) — Paste any command to get a visual explanation
+- [The Linux Command Line by William Shotts](https://linuxcommand.org/tlcl.php) — Free book, excellent for building mental models

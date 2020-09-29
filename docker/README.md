@@ -378,3 +378,111 @@ docker run -d \
   -e POSTGRES_USER=alice \
   -e POSTGRES_PASSWORD=localdev \
   -v pgdata:/var/lib/postgresql/data \
+  -p 5432:5432 \
+  postgres:16
+
+# Connect with psql
+docker exec -it postgres-dev psql -U alice -d myapp
+
+# Or from your host machine (if psql is installed):
+psql -h localhost -U alice -d myapp
+```
+
+### 3. Debug a Container That Won't Start
+
+> Your container exits immediately after `docker run`. How to diagnose.
+
+```bash
+# Check what happened
+docker ps -a                          # see exit code
+
+# View logs from the failed container
+docker logs myapp
+
+# Run interactively with a shell to inspect the environment
+docker run -it --entrypoint /bin/sh myapp:1.0
+
+# Inside the container, check:
+env                                   # environment variables
+ls -la /app                           # files present?
+cat /app/server.js                    # config correct?
+
+# Check image layers for clues
+docker history myapp:1.0
+```
+
+### 4. Clean Up Disk Space Used by Docker
+
+> Docker accumulates stopped containers, dangling images, and unused volumes over time.
+
+```bash
+# Check how much space Docker is using
+docker system df
+
+# Step 1: remove stopped containers
+docker container prune
+
+# Step 2: remove dangling images (untagged layers)
+docker image prune
+
+# Step 3: remove unused volumes (careful — may contain data)
+docker volume prune                   # ⚠️ prompts for confirmation
+
+# Nuclear option: remove everything unused
+docker system prune -a --volumes      # ⚠️ removes ALL unused images + volumes
+```
+
+---
+
+## 💡 Pro Tips
+
+> 💡 **Pin image tags in production**
+> `FROM node:20-alpine` changes with every release. In production Dockerfiles, use the full digest: `FROM node:20.11.0-alpine3.19` or the SHA digest. This makes builds reproducible.
+
+> 💡 **Order Dockerfile layers by change frequency**
+> Docker caches layers. Put rarely-changed instructions (OS packages, dependency install) before frequently-changed ones (COPY source code). This keeps builds fast.
+
+> 💡 **`.dockerignore` — exclude what the container doesn't need**
+> Create `.dockerignore` alongside your Dockerfile:
+> ```
+> node_modules
+> .git
+> .env
+> *.log
+> dist
+> coverage
+> ```
+> Without it, `COPY . .` sends your entire `node_modules` (potentially gigabytes) to the build daemon.
+
+> 💡 **Use `docker exec` instead of SSH**
+> There's no need to run an SSH server in your containers. `docker exec -it container bash` gives you an interactive shell instantly.
+
+> ❌ **Never run containers as root in production**
+> The default is root inside the container. If an attacker escapes the container, they have root access to the host. Always add `USER nonroot` in your Dockerfile.
+
+> ⚠️ **`docker system prune -a` removes images you might need**
+> This command removes all images not referenced by a running container — including ones you've built locally but aren't currently running. Run `docker images` first to see what would be affected.
+
+---
+
+## 🔧 Troubleshooting
+
+| Problem | Likely Cause | Fix |
+| ------- | ------------ | --- |
+| Container exits immediately | Process crashes on start | `docker logs container-name` to see output |
+| `port is already allocated` | Host port in use | Change host port: `-p 8081:80` |
+| `cannot connect to Docker daemon` | Docker not running | Start Docker Desktop or `sudo systemctl start docker` |
+| Container can't reach internet | DNS or network config | Try `--network host` for testing; check firewall |
+| `no space left on device` | Docker disk full | `docker system prune -a` |
+| Changes not reflected after rebuild | Old container still running | `docker rm -f container && docker run ...` |
+| `exec format error` | Wrong CPU architecture | Ensure image arch matches host: `--platform linux/amd64` |
+
+---
+
+## 📚 Resources
+
+- [Docker Documentation](https://docs.docker.com/) — Comprehensive official reference
+- [Dockerfile best practices](https://docs.docker.com/build/building/best-practices/) — Official guide to writing efficient Dockerfiles
+- [Docker Hub](https://hub.docker.com/) — Official image registry
+- [Play with Docker](https://labs.play-with-docker.com/) — Free browser-based Docker playground
+- [dive](https://github.com/wagoodman/dive) — Tool for exploring Docker image layers

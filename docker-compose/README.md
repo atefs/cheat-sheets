@@ -226,3 +226,68 @@ myapp/
 ├── compose.yml           # base config (committed)
 ├── compose.override.yml  # dev overrides (committed or git-ignored)
 ├── compose.prod.yml      # production overrides (committed)
+└── .env                  # local secrets (git-ignored)
+```
+
+```bash
+# Development (auto-merges compose.override.yml)
+docker compose up
+
+# Production (explicit override, no compose.override.yml)
+docker compose -f compose.yml -f compose.prod.yml up -d
+
+# Validate merged config before deploying
+docker compose -f compose.yml -f compose.prod.yml config
+```
+
+### 3. Multi-Environment Setup with `--env-file` and `--file` Flags
+
+> You maintain separate env files for staging and production.
+
+```bash
+# Staging
+docker compose --env-file .env.staging up -d
+
+# Production (with production compose file)
+docker compose -f compose.yml -f compose.prod.yml \
+  --env-file .env.production \
+  up -d
+
+# Show resolved config for production (no actual start)
+docker compose -f compose.yml -f compose.prod.yml \
+  --env-file .env.production \
+  config
+```
+
+---
+
+## 💡 Pro Tips
+
+> 💡 **`docker compose config` is your best debugging tool**
+> Run it to see the fully merged and interpolated compose file — all variables substituted, all override files applied. Catches misconfiguration before you start anything.
+
+> 💡 **`depends_on` with `condition: service_healthy` prevents startup race conditions**
+> Plain `depends_on: [db]` only waits for the container to start, not for Postgres to be ready. Add a `healthcheck` to your db service and use `condition: service_healthy` in `depends_on` to wait for actual readiness.
+
+> 💡 **Named volumes vs bind mounts**
+> Use named volumes (`pgdata:/var/lib/postgresql/data`) for databases and persistent state — Docker manages the location and they're portable. Use bind mounts (`.:/app`) for source code that you want to edit and see reflected live in the container.
+
+> 💡 **The anonymous volume trick for `node_modules`**
+> When using a bind mount for your app code, add an anonymous volume for `node_modules`:
+> ```yaml
+> volumes:
+>   - .:/app
+>   - /app/node_modules    # prevents host node_modules from overwriting container's
+> ```
+> Without this, your host's `node_modules` (or empty directory) overwrites the container's installed packages.
+
+> ❌ **Don't put secrets in `compose.yml`**
+> Environment variables in `compose.yml` are committed to git. Use an `.env` file (git-ignored) with `env_file:` in the service definition, or Docker secrets for production.
+
+---
+
+## 📚 Resources
+
+- [Docker Compose documentation](https://docs.docker.com/compose/) — Official reference
+- [Compose file reference](https://docs.docker.com/compose/compose-file/) — Full YAML key reference
+- [Migrate from v1 to v2](https://docs.docker.com/compose/migrate/) — Guide for updating old `docker-compose.yml` files

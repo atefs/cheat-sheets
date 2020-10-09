@@ -373,3 +373,109 @@ AllowUsers alice bob deploy         # whitelist specific users
 ---
 
 ## 🚀 Real-World Examples
+
+### 1. Generate a Key and Add It to a Server
+
+> You want to log into a server without a password.
+
+```bash
+# Generate key with a passphrase
+ssh-keygen -t ed25519 -C "alice@company.com" -f ~/.ssh/id_ed25519
+
+# Copy public key to server
+ssh-copy-id alice@server.company.com
+
+# Test (should not prompt for password, only for key passphrase if set)
+ssh alice@server.company.com
+
+# Add to ~/.ssh/config for a one-word alias
+echo "
+Host prod
+  HostName server.company.com
+  User alice
+  IdentityFile ~/.ssh/id_ed25519" >> ~/.ssh/config
+
+ssh prod    # done
+```
+
+### 2. Tunnel to a Database Behind a Firewall
+
+> Your Postgres database is on an internal server only accessible via a bastion host. You want to connect with your local SQL client.
+
+```bash
+# Create a background tunnel: localhost:5433 → internal-db:5432 (via bastion)
+ssh -N -f \
+  -L 5433:db.internal.company.com:5432 \
+  alice@bastion.company.com
+
+# Now connect your SQL client to localhost:5433
+psql -h localhost -p 5433 -U alice -d myapp
+
+# When done, find and stop the tunnel
+ps aux | grep ssh
+kill <PID>
+```
+
+### 3. Set Up SSH for GitHub
+
+> Configure git to authenticate to GitHub using your SSH key.
+
+```bash
+# Generate a dedicated key for GitHub
+ssh-keygen -t ed25519 -C "alice@company.com" -f ~/.ssh/github_ed25519
+
+# Print the public key — add this to GitHub Settings → SSH Keys
+cat ~/.ssh/github_ed25519.pub
+
+# Add to ~/.ssh/config
+echo "
+Host github.com
+  User git
+  IdentityFile ~/.ssh/github_ed25519
+  AddKeysToAgent yes" >> ~/.ssh/config
+
+# Test the connection
+ssh -T git@github.com
+# Expected: Hi alice! You've successfully authenticated...
+
+# Now git operations work without a password
+git clone git@github.com:org/repo.git
+```
+
+---
+
+## 🔧 Troubleshooting
+
+| Problem | Likely Cause | Fix |
+| ------- | ------------ | --- |
+| `Permission denied (publickey)` | Key not in `authorized_keys` or wrong permissions | Run `ssh-copy-id`; check `chmod 700 ~/.ssh` and `chmod 600 ~/.ssh/authorized_keys` on server |
+| `WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED` | Server key changed (possible MITM or server rebuilt) | Verify the change is legitimate, then: `ssh-keygen -R hostname` |
+| `Connection refused` | SSH not running or wrong port | Check `sudo systemctl status sshd`; verify port with `sudo ss -tlnp \| grep ssh` |
+| `Too many authentication failures` | Too many keys tried | Add `-i ~/.ssh/specific_key` or use `IdentitiesOnly yes` in config |
+| SSH drops connection after idle | No keepalive configured | Add `ServerAliveInterval 60` to `~/.ssh/config` |
+| Agent not running / `Could not open connection to agent` | ssh-agent not started | Run `eval "$(ssh-agent -s)"` then `ssh-add` |
+
+---
+
+## 💡 Pro Tips
+
+> 💡 **`ControlMaster` multiplexing speeds up repeated connections**
+> With `ControlMaster auto` and `ControlPersist 10m` in your config, subsequent SSH connections to the same host reuse the existing TCP connection — no new handshake. `git push` to a remote SSH server becomes nearly instant.
+
+> 💡 **`ssh -W` for transparent proxy forwarding**
+> Chain through a bastion cleanly by using `-W` in your ProxyCommand rather than running a full shell on the bastion.
+
+> 💡 **Use `ssh-keygen -R hostname` to clean up stale host keys**
+> When you rebuild a server and reconnect, SSH will warn about changed host keys. Run `ssh-keygen -R hostname` to remove the old entry, then reconnect to accept the new one.
+
+> ❌ **Don't use `StrictHostKeyChecking no` in automation**
+> It's tempting to add to scripts to avoid interactive prompts, but it completely disables MITM protection. Instead, pre-populate `known_hosts` during provisioning: `ssh-keyscan hostname >> ~/.ssh/known_hosts`.
+
+---
+
+## 📚 Resources
+
+- [OpenSSH manual pages](https://www.openssh.com/manual.html) — `ssh`, `ssh_config`, `sshd_config`, `ssh-keygen` man pages
+- [SSH Academy](https://www.ssh.com/academy/ssh) — Conceptual guides and tutorials
+- [Smallstep SSH Handbook](https://smallstep.com/ssh/) — Modern SSH practices including certificate-based auth
+- [ArchWiki: SSH Keys](https://wiki.archlinux.org/title/SSH_keys) — Comprehensive reference for key management

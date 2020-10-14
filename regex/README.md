@@ -280,3 +280,83 @@ for (const m of str.matchAll(/(\w+)=(\d+)/g)) {
 
 ### 5. Lookahead and lookbehind in practice
 
+```bash
+# Extract version numbers that appear after "version="
+# Lookbehind: match digits preceded by "version="
+echo 'app version=1.23.0 built on 2024-01-15' | grep -oP "(?<=version=)[0-9.]+"
+# Output: 1.23.0
+
+# Extract values from key=value pairs (lookbehind for key)
+echo "host=db.company.com port=5432" | grep -oP "(?<=host=)\S+"
+# Output: db.company.com
+
+# Match a word only if NOT followed by "Error" (negative lookahead)
+echo -e "Connection: OK\nConnection: Error" | grep -P "Connection(?! Error)"
+# Matches only the first line
+```
+
+```python
+# In Python — password must contain a digit (positive lookahead)
+import re
+has_digit = re.match(r"(?=.*\d).{8,}", "myp4ss0rd")  # matches: has digit + 8+ chars
+```
+
+---
+
+## 🧪 Testing Tools
+
+**Online testers:**
+
+- [regex101.com](https://regex101.com) — Best all-around tester; supports PCRE, Python, JavaScript, Go; shows match details and step-by-step explanation
+- [regexr.com](https://regexr.com/) — Clean UI with a community patterns library and detailed hover-explanation
+
+**One-liner tests from the terminal:**
+
+```bash
+# Test a pattern with Python
+echo "alice@company.com" | python3 -c "
+import re, sys
+pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+line = sys.stdin.read().strip()
+m = re.search(pattern, line)
+print('Match:', m.group() if m else 'No match')
+"
+
+# Test a pattern with Node.js
+echo "2024-01-15" | node -e "
+const line = require('fs').readFileSync('/dev/stdin','utf8').trim();
+const m = line.match(/\d{4}-\d{2}-\d{2}/);
+console.log('Match:', m ? m[0] : 'No match');
+"
+
+# Quick grep test
+echo "test@example.com" | grep -oE "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+```
+
+---
+
+## 💡 Pro Tips
+
+> 💡 **Always anchor your patterns when validating**
+> `grep -E "[a-z]+"` matches any line containing a lowercase letter. For validation, use `^...$` anchors: `grep -E "^[a-z]+$"` matches lines that are entirely lowercase letters.
+
+> 💡 **Use raw strings in Python**
+> Always use `r"..."` for regex patterns in Python. Without it, `\b` (word boundary) becomes a backspace character.
+
+> 💡 **Non-capturing groups `(?:...)` reduce noise**
+> When you need to group for alternation but don't need to capture: `(?:error|warning)` instead of `(error|warning)`. Fewer capture groups means cleaner `.group()` indexing.
+
+> 💡 **`grep -o` prints only the matching part**
+> Combined with `-E` or `-P`, this is the fastest way to extract structured data from logs without awk.
+
+> ❌ **Don't use regex to parse HTML or JSON**
+> Regex cannot reliably parse nested structures. Use an HTML parser (`BeautifulSoup`, `DOMParser`) or JSON parser (`jq`, `json.loads`) instead. This is one of the most common misuses of regex.
+
+---
+
+## 📚 Resources
+
+- [regex101.com](https://regex101.com) — Interactive tester with step-by-step explanation
+- [regular-expressions.info](https://www.regular-expressions.info/) — Comprehensive tutorial covering all flavors
+- [PCRE2 documentation](https://www.pcre.org/current/doc/html/) — Official PCRE2 reference
+- [Regexes: The Good Parts](https://www.loggly.com/blog/regexes-the-bad-parts/) — Practical pitfalls to avoid

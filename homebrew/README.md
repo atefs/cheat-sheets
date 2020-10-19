@@ -226,3 +226,68 @@ cask "raycast"                      # Spotlight replacement
 cask "font-jetbrains-mono-nerd-font"
 cask "font-fira-code-nerd-font"
 ```
+
+### Bundle commands
+
+```bash
+# Install everything listed in the Brewfile
+brew bundle install
+# or: brew bundle install --file=~/dotfiles/Brewfile
+
+# Check what from the Brewfile is missing (no install)
+brew bundle check
+brew bundle check --verbose          # list exactly what's missing
+
+# Generate a Brewfile from your current installs
+brew bundle dump
+brew bundle dump --force             # overwrite existing Brewfile
+brew bundle dump --describe          # add comments with package descriptions
+```
+
+---
+
+## 💡 Pro Tips
+
+> 💡 **`brew leaves` shows what you actually installed (not dependencies)**
+> `brew list` shows everything including transitive dependencies. `brew leaves` shows only packages with no dependents — the things you explicitly need. Use it to audit and clean your Brewfile.
+> ```bash
+> brew leaves
+> brew leaves | wc -l               # how many top-level packages
+> ```
+
+> 💡 **Inspect the full dependency tree**
+> ```bash
+> brew deps --tree node             # dependency tree for a package
+> brew deps --installed --tree      # dependency tree for everything installed
+> brew uses --installed node        # which installed packages depend on node
+> ```
+
+> 💡 **`brew pin` prevents unwanted upgrades**
+> Pin packages that break with upgrades (custom builds, specific versions):
+> ```bash
+> brew pin python@3.11              # lock to current version
+> brew unpin python@3.11            # allow upgrades again
+> brew list --pinned                # see all pinned packages
+> ```
+
+> 💡 **Manage background services with `brew services`**
+> Instead of writing LaunchAgents manually, let Homebrew manage them:
+> ```bash
+> brew services start postgresql@16  # start + enable at login
+> brew services stop redis
+> brew services list                 # see all registered services + status
+> ```
+
+> 💡 **`HOMEBREW_NO_ANALYTICS=1` in your environment**
+> Add `export HOMEBREW_NO_ANALYTICS=1` to `~/.zshrc` or `~/.bashrc` to disable Homebrew's usage analytics.
+
+> ❌ **Don't `sudo brew install`**
+> Homebrew is designed to work without sudo. Running it with sudo can corrupt permissions in the Cellar and break future installs. If you hit permission errors, run `brew doctor` to diagnose.
+
+---
+
+## 📚 Resources
+
+- [Homebrew documentation](https://docs.brew.sh/) — Official reference
+- [Homebrew Formulae](https://formulae.brew.sh/) — Searchable formula and cask database
+- [homebrew-bundle](https://github.com/Homebrew/homebrew-bundle) — Brewfile documentation

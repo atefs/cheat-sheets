@@ -362,3 +362,106 @@ terraform apply tfplan
 
 ### 2. Remote state in S3 with DynamoDB locking
 
+See the [Backend Configuration](#backend-configuration--remote-state-in-s3-with-dynamodb-locking) section above for the full setup.
+
+```bash
+# After creating the S3 bucket and DynamoDB table:
+terraform init
+# Terraform will ask to migrate local state to S3
+
+# Verify backend
+terraform show    # reads from S3
+```
+
+### 3. Module call with variable passing
+
+Use the community AWS VPC module from the Terraform Registry.
+
+```hcl
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "~> 5.0"
+
+  name = "myapp-prod-vpc"
+  cidr = "10.0.0.0/16"
+
+  azs             = ["us-east-1a", "us-east-1b", "us-east-1c"]
+  private_subnets = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+  public_subnets  = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
+
+  enable_nat_gateway = true
+  single_nat_gateway = true
+
+  tags = local.tags
+}
+```
+
+```bash
+terraform init    # downloads the module
+terraform plan
+```
+
+### 4. Workspace-based environment separation
+
+Use workspaces to maintain separate state for dev and prod with the same configuration.
+
+```bash
+# Create and switch to dev workspace
+terraform workspace new dev
+terraform apply -var="environment=dev"
+
+# Switch to prod
+terraform workspace new prod
+terraform apply -var="environment=prod"
+```
+
+Reference the current workspace in HCL to vary resource sizes per environment:
+
+```hcl
+# terraform.workspace returns the current workspace name
+locals {
+  instance_type = terraform.workspace == "prod" ? "t3.small" : "t3.micro"
+}
+```
+
+---
+
+## 💡 Pro Tips
+
+> 💡 **Always use `-out=tfplan` then `apply tfplan`**
+> Running `terraform apply` directly re-runs planning and may show different changes if infrastructure changed between plan and apply. Save the plan: `terraform plan -out=tfplan`, review it, then `terraform apply tfplan` — what you reviewed is exactly what runs.
+
+> 💡 **`terraform validate` in CI before plan**
+> Add `terraform fmt -check` and `terraform validate` as early CI steps. They're fast and catch syntax errors without needing credentials.
+
+> 💡 **Lock provider versions with `~>` (pessimistic constraint operator)**
+> `version = "~> 5.0"` allows 5.x but not 6.x. This prevents surprise breaking changes from major provider upgrades during `terraform init`.
+
+> 💡 **`terraform state rm` before deleting a resource from config**
+> If you want to stop managing a resource without destroying it, remove it from state first: `terraform state rm aws_instance.web`. Then remove it from your `.tf` file. Terraform will leave the real resource untouched.
+
+> ❌ **Never use local state for team projects**
+> Local `.tfstate` files cannot be shared, lead to conflicts, and are easily lost. Always configure a remote backend (S3, Terraform Cloud, GCS) for any project used by more than one person.
+
+---
+
+## 🔍 Troubleshooting
+
+| Problem | Likely Cause | Fix |
+| ------- | ------------ | --- |
+| `Error: No valid credential sources` | AWS credentials not configured | Run `aws configure` or set `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` |
+| `Error acquiring the state lock` | Another apply is running or previous apply crashed | Check for stale lock in DynamoDB: `terraform force-unlock LOCK_ID` |
+| `Error: Resource already exists` | Resource exists but isn't in state | `terraform import resource.name id` to bring it under management |
+| Provider version conflict | Incompatible provider versions in modules | Run `terraform init -upgrade` to resolve |
+| `terraform plan` shows unexpected destroy | State drift or resource renamed in config | Use `terraform state mv` to rename resources, or a `moved {}` block |
+| Slow `terraform plan` | Large state or many API calls | Use `-target` for focused changes; split large configs into modules |
+
+---
+
+## 📚 Resources
+
+- [Terraform documentation](https://developer.hashicorp.com/terraform/docs) — Official reference
+- [OpenTofu documentation](https://opentofu.org/docs/) — Open-source fork documentation
+- [Terraform Registry](https://registry.terraform.io/) — Community modules and providers
+- [Learn Terraform (HashiCorp)](https://developer.hashicorp.com/terraform/tutorials) — Official tutorials
+- [Terragrunt](https://terragrunt.gruntwork.io/) — Thin wrapper for DRY Terraform configurations

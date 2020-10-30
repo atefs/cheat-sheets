@@ -293,3 +293,87 @@ sudo apt-mark showhold            # verify
 
 # Method 2: preferences.d (more control)
 cat <<'EOF' | sudo tee /etc/apt/preferences.d/nginx
+Package: nginx
+Pin: version 1.24.*
+Pin-Priority: 1001
+EOF
+
+# Verify
+apt-cache policy nginx            # should show held version as installed
+sudo apt upgrade                  # nginx should not appear in upgrade list
+```
+
+### 3. Install a `.deb` file and fix missing dependencies
+
+You downloaded a `.deb` file for an app not in the standard repos.
+
+```bash
+# Download the .deb file
+wget https://releases.company.com/app/v2.1.0/app-2.1.0-amd64.deb
+
+# Install it (dpkg doesn't resolve dependencies)
+sudo dpkg -i app-2.1.0-amd64.deb
+
+# If it reports missing dependencies:
+# dpkg: dependency problems prevent configuration of app:
+#   app depends on libssl3 (>= 3.0.0); however...
+
+# Fix by letting apt resolve and install missing deps
+sudo apt install -f
+
+# Verify it installed
+dpkg -l | grep "^ii.*app"
+app --version
+```
+
+---
+
+## 💡 Pro Tips
+
+> 💡 **`apt update` before every install in scripts**
+> Always run `apt-get update` before `apt-get install` in scripts and Dockerfiles. Without it, you're working with a stale package index and may install outdated versions or hit "package not found" errors.
+
+> 💡 **`apt-cache policy` shows all available versions**
+> `apt-cache policy nginx` shows which version is installed, which is available in each configured repo, and the repo priority. Essential for debugging "why is this version being installed?" questions.
+
+> 💡 **Clean up in Dockerfiles to reduce image size**
+> In every Dockerfile `RUN` block that uses `apt`:
+> ```dockerfile
+> RUN apt-get update && apt-get install -y --no-install-recommends \
+>     nginx \
+>  && apt-get clean \
+>  && rm -rf /var/lib/apt/lists/*
+> ```
+> The `rm -rf /var/lib/apt/lists/*` removes the package index cache from the image layer.
+
+> 💡 **`dpkg -S` to find which package owns a file**
+> ```bash
+> dpkg -S /usr/bin/python3       # → python3-minimal: /usr/bin/python3
+> dpkg -S $(which nginx)          # find package for any binary in PATH
+> ```
+
+> ❌ **Don't mix `apt` and manual installs in production**
+> Installing software by downloading binaries or compiling from source alongside apt-managed packages creates conflicts, breaks dependency tracking, and makes upgrades unpredictable. Use apt, snap, or a dedicated version manager for each tool.
+
+---
+
+## 🔍 Troubleshooting
+
+| Problem | Likely Cause | Fix |
+| ------- | ------------ | --- |
+| `Unable to locate package X` | Package index stale or package not in repo | `sudo apt update` first; or add the package's repository |
+| `dpkg was interrupted` | Previous install/upgrade crashed | `sudo dpkg --configure -a` |
+| `Unmet dependencies` | Conflicting package versions | `sudo apt install -f` to auto-resolve |
+| `Hash Sum mismatch` | Stale or corrupted package cache | `sudo apt clean && sudo apt update` |
+| `Package X is kept back` | New dependencies needed for upgrade | `sudo apt full-upgrade` |
+| `E: Could not get lock /var/lib/dpkg/lock` | Another apt process is running | Wait for it to finish; if stale: `sudo rm /var/lib/dpkg/lock-frontend` then `sudo dpkg --configure -a` |
+| `W: GPG error: ... NO_PUBKEY` | Missing repository signing key | Add the key with the modern `signed-by=` method (see above) |
+
+---
+
+## 📚 Resources
+
+- [Ubuntu documentation: apt](https://ubuntu.com/server/docs/package-management) — Package management guide
+- [Debian apt manual](https://manpages.debian.org/bookworm/apt/apt.8.en.html) — Official man page
+- [apt-get vs apt](https://itsfoss.com/apt-vs-apt-get-difference/) — When to use which
+- [Debian Policy: Package priorities](https://www.debian.org/doc/debian-policy/ch-archive.html#priorities) — Priority system explained

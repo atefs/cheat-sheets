@@ -629,6 +629,9 @@ Dockerfile text eol=lf
 > 💡 **`git switch -` jumps back to your previous branch**
 > Works like `cd -` — one keystroke to return to where you were. Pairs well with `git stash` for rapid context switching.
 
+> 💡 **`git log --follow file` tracks history across renames**
+> Plain `git log file` stops at the rename. Add `--follow` to trace commits all the way back to when the file had a different name.
+
 ## 📚 Resources
 
 - [git-scm.com Official Book (Pro Git)](https://git-scm.com/book/en/v2) — Free, comprehensive, the definitive reference

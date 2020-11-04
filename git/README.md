@@ -632,6 +632,9 @@ Dockerfile text eol=lf
 > 💡 **`git log --follow file` tracks history across renames**
 > Plain `git log file` stops at the rename. Add `--follow` to trace commits all the way back to when the file had a different name.
 
+> 💡 **`git worktree` lets you check out two branches simultaneously**
+> `git worktree add ../hotfix hotfix-123` creates a second working directory on the hotfix branch. Review a PR and keep coding on main at the same time, no stash needed.
+
 ## 📚 Resources
 
 - [git-scm.com Official Book (Pro Git)](https://git-scm.com/book/en/v2) — Free, comprehensive, the definitive reference

@@ -425,6 +425,9 @@ set clipboard=unnamedplus         " Vimscript
 
 ---
 
+> 💡 **`Ctrl-o` / `Ctrl-i` — navigate the jumplist**
+> Every time you jump (search, `G`, mark, etc.) Vim adds the position to the jumplist. `Ctrl-o` goes back, `Ctrl-i` goes forward. Use `:jumps` to see the full list. Great for returning to where you were after exploring a file.
+
 ## 📚 Resources
 
 - [Vim official documentation](https://vimdoc.sourceforge.net/) — Built-in `:help` is also excellent; try `:help motion.txt`

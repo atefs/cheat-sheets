@@ -428,6 +428,9 @@ set clipboard=unnamedplus         " Vimscript
 > 💡 **`Ctrl-o` / `Ctrl-i` — navigate the jumplist**
 > Every time you jump (search, `G`, mark, etc.) Vim adds the position to the jumplist. `Ctrl-o` goes back, `Ctrl-i` goes forward. Use `:jumps` to see the full list. Great for returning to where you were after exploring a file.
 
+> 💡 **`:set paste` before pasting from outside Vim**
+> When pasting text into Insert mode from the system clipboard via the terminal, Vim's auto-indent re-indents each line, producing a staircase effect. Run `:set paste` first, paste, then `:set nopaste`. Or set `set clipboard=unnamedplus` so `p` always pastes from the system clipboard without the problem.
+
 ## 📚 Resources
 
 - [Vim official documentation](https://vimdoc.sourceforge.net/) — Built-in `:help` is also excellent; try `:help motion.txt`

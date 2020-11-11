@@ -431,6 +431,9 @@ set clipboard=unnamedplus         " Vimscript
 > 💡 **`:set paste` before pasting from outside Vim**
 > When pasting text into Insert mode from the system clipboard via the terminal, Vim's auto-indent re-indents each line, producing a staircase effect. Run `:set paste` first, paste, then `:set nopaste`. Or set `set clipboard=unnamedplus` so `p` always pastes from the system clipboard without the problem.
 
+> 💡 **`gv` re-selects your last Visual selection**
+> After leaving Visual mode, `gv` instantly re-enters Visual mode and re-highlights the same text. Useful when you realise you want to operate on the same selection again without navigating back.
+
 ## 📚 Resources
 
 - [Vim official documentation](https://vimdoc.sourceforge.net/) — Built-in `:help` is also excellent; try `:help motion.txt`

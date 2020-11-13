@@ -370,6 +370,8 @@ map("v", "K", ":m '<-2<CR>gv=gv")
 
 ### Plugin Manager: `lazy.nvim`
 
+> 💡 `lazy.nvim` is the current community standard. You may encounter older configs using `packer.nvim` — it is deprecated and unmaintained. Migration is straightforward: lazy.nvim uses the same plugin spec format and adds parallel loading, lockfile support (`lazy-lock.json`), and a built-in UI.
+
 `lazy.nvim` is the current standard plugin manager for Neovim. It lazy-loads plugins automatically for fast startup.
 
 ```lua

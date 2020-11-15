@@ -288,6 +288,8 @@ Place this in `~/.vimrc` (Vim) or `~/.config/nvim/init.vim` (Neovim using Vimscr
 | Windows (native) | `%USERPROFILE%\_vimrc` | `%LOCALAPPDATA%\nvim\init.vim` or `%LOCALAPPDATA%\nvim\init.lua` |
 | Windows (WSL) | `~/.vimrc` | `~/.config/nvim/init.lua` (within WSL filesystem) |
 
+> 💡 Run `:echo stdpath("config")` inside Neovim to print the exact config directory on your machine. On **Windows (native)** this is typically `C:\Users\<you>\AppData\Local\nvim`. Create the directory if it does not exist, then place `init.lua` inside it.
+
 ```vim
 " ============ Basics ============
 set number relativenumber     " hybrid line numbers (absolute on current, relative on others)

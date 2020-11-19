@@ -455,6 +455,9 @@ Install plugins: `Prefix + I` (capital I) after editing `.tmux.conf`.
 > 💡 **Synchronize panes to type in all panes simultaneously**
 > `Prefix + :` then `setw synchronize-panes on` sends your keystrokes to every pane in the current window at once. Great for running the same command on multiple servers in parallel. Turn off with `setw synchronize-panes off`.
 
+> 💡 **`pipe-pane` — log a pane's output to a file**
+> Run `Prefix + :` then `pipe-pane -o 'cat >> ~/session.log'` to start capturing everything printed in the current pane to a file. Run `pipe-pane` with no arguments to stop. Useful for auditing long-running server output.
+
 ## 📚 Resources
 
 - [tmux GitHub wiki](https://github.com/tmux/tmux/wiki) — Official documentation and FAQ

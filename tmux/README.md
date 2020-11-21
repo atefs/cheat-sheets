@@ -458,6 +458,9 @@ Install plugins: `Prefix + I` (capital I) after editing `.tmux.conf`.
 > 💡 **`pipe-pane` — log a pane's output to a file**
 > Run `Prefix + :` then `pipe-pane -o 'cat >> ~/session.log'` to start capturing everything printed in the current pane to a file. Run `pipe-pane` with no arguments to stop. Useful for auditing long-running server output.
 
+> 💡 **Survive reboots with tmux-resurrect + tmux-continuum**
+> Install both plugins via tpm. `tmux-resurrect` lets you manually save/restore with `Prefix + Ctrl-s` / `Prefix + Ctrl-r`. `tmux-continuum` automates saves every 15 minutes. Add `set -g @continuum-restore 'on'` to auto-restore on tmux server start.
+
 ## 📚 Resources
 
 - [tmux GitHub wiki](https://github.com/tmux/tmux/wiki) — Official documentation and FAQ

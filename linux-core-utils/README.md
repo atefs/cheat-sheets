@@ -501,6 +501,9 @@ comm -13 /tmp/pkgs-a.txt /tmp/pkgs-b.txt
 
 ---
 
+> 💡 **Use `-print0` + `xargs -0` for filenames with spaces**
+> `find . -name '*.log' -print0 | xargs -0 rm` handles filenames containing spaces, newlines, or special characters safely. The `-0` flag reads null-delimited input instead of whitespace-delimited. Always prefer this over bare `xargs` when processing file paths.
+
 ## 📚 Resources
 
 - [GNU Coreutils Manual](https://www.gnu.org/software/coreutils/manual/) — Definitive reference for all tools

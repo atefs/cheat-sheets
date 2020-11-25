@@ -504,6 +504,9 @@ comm -13 /tmp/pkgs-a.txt /tmp/pkgs-b.txt
 > 💡 **Use `-print0` + `xargs -0` for filenames with spaces**
 > `find . -name '*.log' -print0 | xargs -0 rm` handles filenames containing spaces, newlines, or special characters safely. The `-0` flag reads null-delimited input instead of whitespace-delimited. Always prefer this over bare `xargs` when processing file paths.
 
+> 💡 **`tee` — write to a file and stdout simultaneously**
+> `command | tee output.log` lets you see the output in real time AND save it to a file. Use `tee -a` to append instead of overwrite. Handy for long builds or migrations where you want a log without losing the live view.
+
 ## 📚 Resources
 
 - [GNU Coreutils Manual](https://www.gnu.org/software/coreutils/manual/) — Definitive reference for all tools

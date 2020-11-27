@@ -507,6 +507,9 @@ comm -13 /tmp/pkgs-a.txt /tmp/pkgs-b.txt
 > 💡 **`tee` — write to a file and stdout simultaneously**
 > `command | tee output.log` lets you see the output in real time AND save it to a file. Use `tee -a` to append instead of overwrite. Handy for long builds or migrations where you want a log without losing the live view.
 
+> 💡 **Process substitution: `diff <(cmd1) <(cmd2)`**
+> Bash process substitution treats the output of a command as a virtual file. `diff <(ls dir1) <(ls dir2)` diffs directory listings without creating temp files. `diff <(sort file1) <(sort file2)` compares sorted versions. Works anywhere a filename is accepted.
+
 ## 📚 Resources
 
 - [GNU Coreutils Manual](https://www.gnu.org/software/coreutils/manual/) — Definitive reference for all tools

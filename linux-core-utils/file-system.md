@@ -442,6 +442,10 @@ tar -xzf "project-backup-${TIMESTAMP}.tar.gz" -C /tmp/verify
 
 ---
 
+> 💡 **Quick disk usage: `du -sh * | sort -h`**
+> Run inside any directory to see human-readable sizes for all entries, sorted smallest to largest. Add `2>/dev/null` to suppress permission errors on subdirectories you cannot read. On macOS, `sort -h` requires GNU coreutils (`brew install coreutils`).
+
+
 ## 📚 Resources
 
 - [GNU Coreutils Manual](https://www.gnu.org/software/coreutils/manual/) — find, chmod, cp, and all core tools

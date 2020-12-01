@@ -446,6 +446,10 @@ tar -xzf "project-backup-${TIMESTAMP}.tar.gz" -C /tmp/verify
 > Run inside any directory to see human-readable sizes for all entries, sorted smallest to largest. Add `2>/dev/null` to suppress permission errors on subdirectories you cannot read. On macOS, `sort -h` requires GNU coreutils (`brew install coreutils`).
 
 
+> 💡 **Find what process has a file open: `lsof /path/to/file`**
+> If a file is busy (cannot unmount, cannot delete), `lsof /path/to/file` shows which process has it open. `lsof -i :8080` lists processes listening on port 8080. `lsof -u username` shows all open files for a user. Essential for debugging "device or resource busy" errors.
+
+
 ## 📚 Resources
 
 - [GNU Coreutils Manual](https://www.gnu.org/software/coreutils/manual/) — find, chmod, cp, and all core tools

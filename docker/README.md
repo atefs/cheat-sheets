@@ -479,6 +479,9 @@ docker system prune -a --volumes      # ⚠️ removes ALL unused images + volum
 
 ---
 
+> 💡 **`docker exec -it` — open a shell in a running container**
+> `docker exec -it mycontainer bash` drops you into a Bash shell inside a running container. Use `sh` if `bash` is not installed (Alpine-based images). Add `-e VAR=value` to inject environment variables for the session. The container keeps running after you exit.
+
 ## 📚 Resources
 
 - [Docker Documentation](https://docs.docker.com/) — Comprehensive official reference

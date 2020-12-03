@@ -482,6 +482,9 @@ docker system prune -a --volumes      # ⚠️ removes ALL unused images + volum
 > 💡 **`docker exec -it` — open a shell in a running container**
 > `docker exec -it mycontainer bash` drops you into a Bash shell inside a running container. Use `sh` if `bash` is not installed (Alpine-based images). Add `-e VAR=value` to inject environment variables for the session. The container keeps running after you exit.
 
+> 💡 **Multi-stage builds keep production images lean**
+> Use `FROM node:20 AS builder` to compile, then `FROM node:20-alpine` and `COPY --from=builder /app/dist ./dist` to copy only the output. The final image excludes build tools and dev dependencies. A 800 MB build image commonly yields a 50 MB production image.
+
 ## 📚 Resources
 
 - [Docker Documentation](https://docs.docker.com/) — Comprehensive official reference

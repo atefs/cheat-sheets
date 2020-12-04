@@ -485,6 +485,9 @@ docker system prune -a --volumes      # ⚠️ removes ALL unused images + volum
 > 💡 **Multi-stage builds keep production images lean**
 > Use `FROM node:20 AS builder` to compile, then `FROM node:20-alpine` and `COPY --from=builder /app/dist ./dist` to copy only the output. The final image excludes build tools and dev dependencies. A 800 MB build image commonly yields a 50 MB production image.
 
+> 💡 **Always use a `.dockerignore` file**
+> Without it, `COPY . .` sends `node_modules`, `.git`, and local secrets to the Docker build context. Create `.dockerignore` with at minimum: `node_modules`, `.git`, `.env`, `*.log`. A smaller build context means faster builds and smaller layers even before the final image is optimised.
+
 ## 📚 Resources
 
 - [Docker Documentation](https://docs.docker.com/) — Comprehensive official reference

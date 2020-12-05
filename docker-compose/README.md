@@ -286,6 +286,9 @@ docker compose -f compose.yml -f compose.prod.yml \
 
 ---
 
+> 💡 **`depends_on` with `condition: service_healthy` waits for readiness**
+> The basic `depends_on: [db]` only waits for the container to start, not for the service inside to be ready. Add a `healthcheck` to the dependency and use `condition: service_healthy` in `depends_on` to wait until the database is actually accepting connections before starting the app.
+
 ## 📚 Resources
 
 - [Docker Compose documentation](https://docs.docker.com/compose/) — Official reference

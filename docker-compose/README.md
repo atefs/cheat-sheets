@@ -289,6 +289,9 @@ docker compose -f compose.yml -f compose.prod.yml \
 > 💡 **`depends_on` with `condition: service_healthy` waits for readiness**
 > The basic `depends_on: [db]` only waits for the container to start, not for the service inside to be ready. Add a `healthcheck` to the dependency and use `condition: service_healthy` in `depends_on` to wait until the database is actually accepting connections before starting the app.
 
+> 💡 **Use `docker-compose.override.yml` for local development overrides**
+> Docker Compose automatically merges `docker-compose.override.yml` into the base `docker-compose.yml`. Keep production config in the base file and put volume mounts, debug ports, and local env vars in the override. Add `docker-compose.override.yml` to `.gitignore` so developer-specific settings never land in the repo.
+
 ## 📚 Resources
 
 - [Docker Compose documentation](https://docs.docker.com/compose/) — Official reference

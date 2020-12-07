@@ -473,6 +473,16 @@ git clone git@github.com:org/repo.git
 
 ---
 
+> 💡 **`ControlMaster` — reuse SSH connections for faster subsequent logins**
+> Add to `~/.ssh/config`:
+> ```
+> Host *
+>   ControlMaster auto
+>   ControlPath ~/.ssh/sockets/%r@%h-%p
+>   ControlPersist 600
+> ```
+> After the first connection, subsequent `ssh`, `scp`, and `rsync` to the same host reuse the existing TCP connection — near-instant. Create the sockets directory with `mkdir -p ~/.ssh/sockets`.
+
 ## 📚 Resources
 
 - [OpenSSH manual pages](https://www.openssh.com/manual.html) — `ssh`, `ssh_config`, `sshd_config`, `ssh-keygen` man pages

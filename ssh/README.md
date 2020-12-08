@@ -483,6 +483,9 @@ git clone git@github.com:org/repo.git
 > ```
 > After the first connection, subsequent `ssh`, `scp`, and `rsync` to the same host reuse the existing TCP connection — near-instant. Create the sockets directory with `mkdir -p ~/.ssh/sockets`.
 
+> 💡 **SSH escape sequences — manage a hung session without closing the terminal**
+> While connected, press `Enter` then `~.` to terminate a hung connection immediately. `~&` puts the session in the background, `~#` lists forwarded connections, `~?` shows all escape sequences. The leading `Enter` is required; `~` typed mid-line is sent as a literal tilde.
+
 ## 📚 Resources
 
 - [OpenSSH manual pages](https://www.openssh.com/manual.html) — `ssh`, `ssh_config`, `sshd_config`, `ssh-keygen` man pages

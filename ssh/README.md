@@ -486,6 +486,14 @@ git clone git@github.com:org/repo.git
 > 💡 **SSH escape sequences — manage a hung session without closing the terminal**
 > While connected, press `Enter` then `~.` to terminate a hung connection immediately. `~&` puts the session in the background, `~#` lists forwarded connections, `~?` shows all escape sequences. The leading `Enter` is required; `~` typed mid-line is sent as a literal tilde.
 
+> 💡 **`ProxyJump` — reach hosts behind a bastion with one command**
+> `ssh -J bastion.example.com internal-server` jumps through the bastion transparently. Or set it permanently in `~/.ssh/config`:
+> ```
+> Host internal-server
+>   ProxyJump bastion.example.com
+> ```
+> After that, `ssh internal-server` handles the jump automatically. Replaces the older `ProxyCommand` approach and works with `scp` and `rsync` too.
+
 ## 📚 Resources
 
 - [OpenSSH manual pages](https://www.openssh.com/manual.html) — `ssh`, `ssh_config`, `sshd_config`, `ssh-keygen` man pages

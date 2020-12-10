@@ -357,6 +357,9 @@ echo "test@example.com" | grep -oE "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2
 > 💡 **Lookahead `(?=...)` matches position, not characters**
 > `\w+(?=:)` matches a word immediately before a colon without consuming the colon. The lookahead is zero-width — nothing is captured. Negative lookahead `(?!...)` asserts absence: `foo(?!bar)` matches `foo` not followed by `bar`. Supported in JavaScript, Python, PCRE, .NET — not in POSIX ERE or Go's RE2.
 
+> 💡 **Non-greedy quantifiers: add `?` to stop at the first match**
+> `<.+>` matches the entire string `<b>bold</b>` (greedy). `<.+?>` matches only `<b>` (non-greedy — stops at the first `>`). Use `*?`, `+?`, `{n,m}?` for non-greedy versions. In most HTML/XML parsing scenarios, non-greedy is what you actually want.
+
 ## 📚 Resources
 
 - [regex101.com](https://regex101.com) — Interactive tester with step-by-step explanation

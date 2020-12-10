@@ -286,6 +286,9 @@ brew bundle dump --describe          # add comments with package descriptions
 
 ---
 
+> 💡 **`brew bundle` — capture and restore your entire Homebrew setup**
+> Run `brew bundle dump` to create a `Brewfile` listing every formula, cask, tap, and Mac App Store app. Commit it to your dotfiles repo. On a new machine, run `brew bundle install` to restore everything in one go. Add `brew bundle cleanup --force` to remove anything not in the Brewfile.
+
 ## 📚 Resources
 
 - [Homebrew documentation](https://docs.brew.sh/) — Official reference

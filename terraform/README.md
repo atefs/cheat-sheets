@@ -458,6 +458,16 @@ locals {
 
 ---
 
+> 💡 **Use `moved {}` blocks instead of `terraform state mv` when refactoring**
+> When renaming a resource or moving it into a module, add a `moved` block instead of running `terraform state mv` manually:
+> ```hcl
+> moved {
+>   from = aws_instance.web
+>   to   = module.web_server.aws_instance.this
+> }
+> ```
+> Terraform applies the rename in state during the next `plan`/`apply` with no manual commands. The block can be deleted after the rename is applied.
+
 ## 📚 Resources
 
 - [Terraform documentation](https://developer.hashicorp.com/terraform/docs) — Official reference

@@ -468,6 +468,9 @@ locals {
 > ```
 > Terraform applies the rename in state during the next `plan`/`apply` with no manual commands. The block can be deleted after the rename is applied.
 
+> 💡 **Keep secrets out of `terraform.tfvars` — use environment variables instead**
+> Terraform automatically reads `TF_VAR_name` environment variables as input variables: `export TF_VAR_db_password=secret`. Use `terraform.tfvars` only for non-sensitive defaults. Store secrets in a secrets manager (AWS Secrets Manager, Vault) and pull them via data sources — never commit credentials to version control, even encrypted.
+
 ## 📚 Resources
 
 - [Terraform documentation](https://developer.hashicorp.com/terraform/docs) — Official reference

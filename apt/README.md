@@ -371,6 +371,9 @@ app --version
 
 ---
 
+> 💡 **`apt-mark hold` — prevent a package from being upgraded**
+> `sudo apt-mark hold linux-image-generic` pins the package at its current version. `apt upgrade` and `apt dist-upgrade` will skip it. Run `apt-mark showhold` to list all held packages. Remove with `sudo apt-mark unhold linux-image-generic`. Useful for kernel versions or packages with known regressions.
+
 ## 📚 Resources
 
 - [Ubuntu documentation: apt](https://ubuntu.com/server/docs/package-management) — Package management guide

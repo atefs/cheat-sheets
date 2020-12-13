@@ -605,6 +605,9 @@ Dockerfile text eol=lf
 > 💡 **`git reflog` is your safety net**
 > Every movement of HEAD is recorded in the reflog, including resets, rebases, and branch deletions. If you think you have lost commits, `git reflog` almost always has what you need.
 
+> 💡 **Global `.gitignore` keeps OS and editor noise out of every repo**
+> Create `~/.gitignore_global` with entries like `.DS_Store`, `Thumbs.db`, `.idea/`, `*.swp`. Register it with `git config --global core.excludesFile ~/.gitignore_global`. This way every project's `.gitignore` stays focused on build artifacts, not your personal tool preferences.
+
 > ❌ **Never rebase shared/public branches**
 > Rebasing rewrites commit SHAs. If teammates have based work on those commits, their history diverges and you create a painful merge situation. Only rebase local, unshared branches.
 

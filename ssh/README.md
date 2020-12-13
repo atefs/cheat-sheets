@@ -494,6 +494,10 @@ git clone git@github.com:org/repo.git
 > ```
 > After that, `ssh internal-server` handles the jump automatically. Replaces the older `ProxyCommand` approach and works with `scp` and `rsync` too.
 
+> 💡 **Verify host fingerprints on first connection to avoid MITM**
+> When connecting to a new host for the first time, SSH shows the server's fingerprint and asks you to confirm. Get the expected fingerprint from the server admin out-of-band (Slack, ticket) before accepting. After accepting, the fingerprint is stored in `~/.ssh/known_hosts`. A changed fingerprint on a subsequent connection triggers a warning — investigate before overriding with `ssh-keygen -R hostname`.
+
+
 ## 📚 Resources
 
 - [OpenSSH manual pages](https://www.openssh.com/manual.html) — `ssh`, `ssh_config`, `sshd_config`, `ssh-keygen` man pages

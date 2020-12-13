@@ -374,6 +374,9 @@ app --version
 > 💡 **`apt-mark hold` — prevent a package from being upgraded**
 > `sudo apt-mark hold linux-image-generic` pins the package at its current version. `apt upgrade` and `apt dist-upgrade` will skip it. Run `apt-mark showhold` to list all held packages. Remove with `sudo apt-mark unhold linux-image-generic`. Useful for kernel versions or packages with known regressions.
 
+> 💡 **`apt-cache policy` — see installed vs available versions and repository priorities**
+> `apt-cache policy nginx` shows the installed version, the candidate version from each repo, and each repo's pin priority. Higher priority wins during upgrades. This is the first command to run when debugging why a package is coming from an unexpected repository or stuck at an older version.
+
 ## 📚 Resources
 
 - [Ubuntu documentation: apt](https://ubuntu.com/server/docs/package-management) — Package management guide

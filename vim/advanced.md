@@ -486,6 +486,10 @@ vim.api.nvim_create_autocmd("LspAttach", {
 
 ---
 
+> 💡 **`:checkhealth` — diagnose your Neovim setup**
+> Run `:checkhealth` inside Neovim to get a full report of providers (Python, Node, clipboard), plugin requirements, and configuration issues. Each item is marked OK, WARNING, or ERROR with actionable fix instructions. Run it after any new plugin install or on a new machine to quickly identify what is missing.
+
+
 ## 📚 Resources
 
 - [Neovim documentation](https://neovim.io/doc/user/) — Comprehensive Neovim-specific reference; also available via `:help`

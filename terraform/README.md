@@ -471,6 +471,10 @@ locals {
 > 💡 **Keep secrets out of `terraform.tfvars` — use environment variables instead**
 > Terraform automatically reads `TF_VAR_name` environment variables as input variables: `export TF_VAR_db_password=secret`. Use `terraform.tfvars` only for non-sensitive defaults. Store secrets in a secrets manager (AWS Secrets Manager, Vault) and pull them via data sources — never commit credentials to version control, even encrypted.
 
+> 💡 **Use data sources to avoid hardcoding IDs that change between environments**
+> Instead of hardcoding `ami = "ami-0abcdef1234567890"` (region-specific and rotated by AWS), use a `data "aws_ami"` block and reference `data.aws_ami.ubuntu.id`. Similarly, `data "aws_vpc" "selected"` looks up a VPC by tag instead of ID. Data sources make configs portable across regions and accounts.
+
+
 ## 📚 Resources
 
 - [Terraform documentation](https://developer.hashicorp.com/terraform/docs) — Official reference

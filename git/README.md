@@ -638,6 +638,10 @@ Dockerfile text eol=lf
 > 💡 **`git worktree` lets you check out two branches simultaneously**
 > `git worktree add ../hotfix hotfix-123` creates a second working directory on the hotfix branch. Review a PR and keep coding on main at the same time, no stash needed.
 
+> 💡 **`git log --graph --oneline --all` — visualise branch topology in the terminal**
+> This gives a compact ASCII branch graph showing all branches and their merge points. Combine with `--decorate` to see branch and tag labels. Add it as a git alias: `git config --global alias.tree 'log --graph --oneline --all --decorate'` so you can run `git tree` anywhere.
+
+
 ## 📚 Resources
 
 - [git-scm.com Official Book (Pro Git)](https://git-scm.com/book/en/v2) — Free, comprehensive, the definitive reference

@@ -5,8 +5,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-[![Contributors](https://img.shields.io/github/contributors/YOUR_ORG/cheat-sheets)](https://github.com/YOUR_ORG/cheat-sheets/graphs/contributors)
-[![Stars](https://img.shields.io/github/stars/YOUR_ORG/cheat-sheets?style=social)](https://github.com/YOUR_ORG/cheat-sheets)
+[![Contributors](https://img.shields.io/github/contributors/atefs/cheat-sheets)](https://github.com/atefs/cheat-sheets/graphs/contributors)
+[![Stars](https://img.shields.io/github/stars/atefs/cheat-sheets?style=social)](https://github.com/atefs/cheat-sheets)
 
 ---
 
@@ -43,7 +43,7 @@ useful for piping into a pager: `curl -s <raw-url> | less`.
 ### Clone Locally
 
 ```bash
-git clone https://github.com/YOUR_ORG/cheat-sheets.git
+git clone https://github.com/atefs/cheat-sheets.git
 cd cheat-sheets
 # Open any sheet in your terminal pager
 less git/README.md

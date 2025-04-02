@@ -41,7 +41,7 @@ git clone https://github.com/YOUR_USERNAME/cheat-sheets.git
 cd cheat-sheets
 
 # Add the upstream remote so you can sync later
-git remote add upstream https://github.com/ORIGINAL_ORG/cheat-sheets.git
+git remote add upstream https://github.com/atefs/cheat-sheets.git
 ```
 
 ### Branch naming

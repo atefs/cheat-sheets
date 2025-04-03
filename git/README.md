@@ -649,3 +649,6 @@ Dockerfile text eol=lf
 - [Oh Shit, Git!?!](https://ohshitgit.com/) — Plain-English fixes for common mistakes
 - [Conventional Commits](https://www.conventionalcommits.org/) — Commit message specification
 - [Learn Git Branching](https://learngitbranching.js.org/) — Interactive visual tutorial
+
+> 💡 **`git diff --word-diff` — see exactly which words changed, not whole lines**
+> Standard `git diff` highlights entire lines even when only one word changed. `--word-diff` shows inline additions and deletions at the word level: `[-old-]{+new+}`. Especially useful for prose, documentation, and long config lines where line-level diffs are noisy.

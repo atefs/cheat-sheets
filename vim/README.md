@@ -441,3 +441,6 @@ set clipboard=unnamedplus         " Vimscript
 - [Practical Vim by Drew Neil](https://pragprog.com/titles/dnvim2/practical-vim-second-edition/) — The best book on Vim
 - [vim-adventures.com](https://vim-adventures.com/) — Game-based learning of Vim motions
 - [Neovim documentation](https://neovim.io/doc/) — For Neovim-specific features
+
+> 💡 **`Ctrl-a` / `Ctrl-x` — increment and decrement numbers under the cursor**
+> Place the cursor on a number and press `Ctrl-a` to increment it or `Ctrl-x` to decrement. Combine with a count: `10Ctrl-a` adds 10. Works in Visual mode too — select multiple lines and `g Ctrl-a` creates a numbered sequence (1, 2, 3...). Great for updating port numbers, indices, or generating test data.

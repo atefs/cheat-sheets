@@ -496,3 +496,6 @@ vim.api.nvim_create_autocmd("LspAttach", {
 - [lazy.nvim README](https://github.com/folke/lazy.nvim) — Plugin manager documentation and configuration examples
 - [nvim-lspconfig server configurations](https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md) — LSP setup for every supported language
 - [Vimcasts](http://vimcasts.org/) — Free screencasts on advanced Vim techniques by Drew Neil
+
+> 💡 **`:terminal` — open a terminal inside Neovim without leaving your session**
+> Run `:terminal` to open a full terminal emulator in a Neovim buffer. Use `:split | terminal` or `:vsplit | terminal` to keep your code visible alongside the shell. Press `i` to enter the terminal, and `Ctrl-\ Ctrl-n` to return to Normal mode. Neovim's terminal supports job control so you can run tests, servers, or REPLs without a window manager.

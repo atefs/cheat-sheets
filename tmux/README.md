@@ -467,3 +467,6 @@ Install plugins: `Prefix + I` (capital I) after editing `.tmux.conf`.
 - [tmux Cheat Sheet by tmuxcheatsheet.com](https://tmuxcheatsheet.com/) — Quick reference
 - [The Tao of tmux](https://leanpub.com/the-tao-of-tmux/read) — Free online book, comprehensive guide
 - [tpm (tmux Plugin Manager)](https://github.com/tmux-plugins/tpm) — Plugin ecosystem entry point
+
+> 💡 **`Prefix + Space` — cycle through preset pane layouts instantly**
+> Press `Prefix + Space` to cycle through tmux's built-in layouts: even-horizontal, even-vertical, main-horizontal, main-vertical, and tiled. Much faster than manually resizing panes when you just need a reasonable split. If you want a specific layout, use `Prefix + :` then `select-layout main-vertical`.

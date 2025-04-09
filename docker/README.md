@@ -495,3 +495,6 @@ docker system prune -a --volumes      # ⚠️ removes ALL unused images + volum
 - [Docker Hub](https://hub.docker.com/) — Official image registry
 - [Play with Docker](https://labs.play-with-docker.com/) — Free browser-based Docker playground
 - [dive](https://github.com/wagoodman/dive) — Tool for exploring Docker image layers
+
+> 💡 **`docker build --progress=plain` — see full build output for debugging**
+> By default, BuildKit shows a condensed, animated progress view that hides individual command output. When a build step fails, add `--progress=plain` to get the full scrollable output of every RUN instruction. Essential for diagnosing failures in CI or complex multi-stage builds.

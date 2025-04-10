@@ -297,3 +297,6 @@ docker compose -f compose.yml -f compose.prod.yml \
 - [Docker Compose documentation](https://docs.docker.com/compose/) — Official reference
 - [Compose file reference](https://docs.docker.com/compose/compose-file/) — Full YAML key reference
 - [Migrate from v1 to v2](https://docs.docker.com/compose/migrate/) — Guide for updating old `docker-compose.yml` files
+
+> 💡 **`docker compose watch` — automatic rebuild and sync on file changes**
+> Compose Watch (v2.22+) monitors your source files and automatically rebuilds or syncs changes into running containers. Define a `develop.watch` section in your service to control which paths trigger a sync versus a full rebuild. Run `docker compose watch` instead of `docker compose up` to enable it. Faster feedback loop than bind mounts for compiled languages.

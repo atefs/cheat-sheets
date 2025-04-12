@@ -504,3 +504,14 @@ git clone git@github.com:org/repo.git
 - [SSH Academy](https://www.ssh.com/academy/ssh) — Conceptual guides and tutorials
 - [Smallstep SSH Handbook](https://smallstep.com/ssh/) — Modern SSH practices including certificate-based auth
 - [ArchWiki: SSH Keys](https://wiki.archlinux.org/title/SSH_keys) — Comprehensive reference for key management
+
+> 💡 **Persistent tunnels via `~/.ssh/config` — no flags to remember**
+> Instead of typing `-L 5432:db:5432` every time, define the tunnel permanently in your config file:
+> ```
+> Host db-tunnel
+>   HostName bastion.company.com
+>   User alice
+>   LocalForward 5432 db.internal:5432
+>   RequestTTY no
+> ```
+> Then just `ssh -Nf db-tunnel` to start it in the background. Combine with `ControlMaster` to keep the tunnel alive across sessions.

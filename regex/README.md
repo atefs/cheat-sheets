@@ -366,3 +366,6 @@ echo "test@example.com" | grep -oE "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2
 - [regular-expressions.info](https://www.regular-expressions.info/) — Comprehensive tutorial covering all flavors
 - [PCRE2 documentation](https://www.pcre.org/current/doc/html/) — Official PCRE2 reference
 - [Regexes: The Good Parts](https://www.loggly.com/blog/regexes-the-bad-parts/) — Practical pitfalls to avoid
+
+> 💡 **Possessive quantifiers `++`, `*+`, `?+` — prevent catastrophic backtracking**
+> Possessive quantifiers work like greedy ones but never give back characters once matched. If the overall pattern fails, it fails immediately instead of trying shorter matches. `\d++` is safe against pathological input that can hang naive `\d+` patterns. Available in PCRE, Java, and .NET — not in JavaScript or Python's `re` module. Use atomic groups `(?>...)` as an equivalent where possessive quantifiers are not supported.

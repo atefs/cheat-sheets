@@ -297,3 +297,6 @@ brew bundle dump --describe          # add comments with package descriptions
 - [Homebrew documentation](https://docs.brew.sh/) — Official reference
 - [Homebrew Formulae](https://formulae.brew.sh/) — Searchable formula and cask database
 - [homebrew-bundle](https://github.com/Homebrew/homebrew-bundle) — Brewfile documentation
+
+> 💡 **`brew upgrade --greedy` — include casks that handle their own updates**
+> By default, `brew upgrade` skips casks with built-in auto-update mechanisms (Chrome, Firefox, VS Code). Add `--greedy` to include them in the upgrade sweep. Run `brew outdated --greedy` first to preview what would be updated. Useful when you want a single command to catch every pending update on your system.

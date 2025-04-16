@@ -482,3 +482,6 @@ locals {
 - [Terraform Registry](https://registry.terraform.io/) — Community modules and providers
 - [Learn Terraform (HashiCorp)](https://developer.hashicorp.com/terraform/tutorials) — Official tutorials
 - [Terragrunt](https://terragrunt.gruntwork.io/) — Thin wrapper for DRY Terraform configurations
+
+> 💡 **`terraform console` — test expressions interactively before applying**
+> `terraform console` opens a REPL where you can evaluate HCL expressions against your current state and configuration. Test variable interpolation, function calls, and resource attribute lookups without running a full plan. Exit with `Ctrl-D` or type `exit`. Requires `terraform init` to have been run first so providers are available.

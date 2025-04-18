@@ -383,3 +383,6 @@ app --version
 - [Debian apt manual](https://manpages.debian.org/bookworm/apt/apt.8.en.html) — Official man page
 - [apt-get vs apt](https://itsfoss.com/apt-vs-apt-get-difference/) — When to use which
 - [Debian Policy: Package priorities](https://www.debian.org/doc/debian-policy/ch-archive.html#priorities) — Priority system explained
+
+> 💡 **`apt list --all-versions` — see every available version across all repos**
+> `apt list --all-versions nginx` shows all versions of a package from every configured repository, not just the candidate. Useful for debugging pinning issues or confirming that a specific version is available before installing it with `apt install nginx=1.24.0-*`.

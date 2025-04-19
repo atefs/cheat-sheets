@@ -517,3 +517,6 @@ comm -13 /tmp/pkgs-a.txt /tmp/pkgs-b.txt
 - [sed manual (GNU)](https://www.gnu.org/software/sed/manual/sed.html) — Complete sed reference
 - [Bash Hackers Wiki: Pipelines](https://wiki.bash-hackers.org/syntax/basicgrammar#pipelines) — Deep dive into pipe behavior
 - [commandlinefu.com](https://www.commandlinefu.com/) — Community-contributed one-liners
+
+> 💡 **`column -t` — auto-align whitespace-separated output into clean columns**
+> Pipe any whitespace-delimited text through `column -t` to align it into a readable table. `mount | column -t` is the classic example. Use `-s ','` to set a custom input delimiter: `cat data.csv | column -t -s ','`. Great for making `docker ps`, `df -h`, and other command output more readable in wide terminals.

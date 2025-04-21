@@ -456,3 +456,6 @@ tar -xzf "project-backup-${TIMESTAMP}.tar.gz" -C /tmp/verify
 - [rsync man page](https://linux.die.net/man/1/rsync) — Complete rsync flag reference
 - [Explainshell](https://explainshell.com/) — Paste any command to get a visual explanation
 - [The Linux Command Line by William Shotts](https://linuxcommand.org/tlcl.php) — Free book, excellent for building mental models
+
+> 💡 **`stat` — detailed file metadata beyond what `ls -l` shows**
+> `stat file.txt` shows inode number, permissions in both octal and symbolic form, owner, group, size, and all three timestamps (access, modify, status change). For scripting, use format strings: `stat --format='%s' file.txt` prints the size in bytes. On macOS the syntax differs: `stat -f '%z' file.txt`. Useful in scripts that need to check file age, size, or permission bits programmatically.

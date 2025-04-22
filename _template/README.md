@@ -1,4 +1,5 @@
 <!-- BANNER: Use a consistent emoji + tool name heading -->
+<!-- Note: Include macOS, Ubuntu/Debian, and Windows variants for all platform-specific commands. -->
 
 # <emoji> Tool Name Cheat Sheet
 

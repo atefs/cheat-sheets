@@ -6,6 +6,26 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-04-23
+
+### Added
+
+- Git: word-diff tip for reviewing inline changes
+- Vim: increment/decrement numbers, terminal buffer in Neovim
+- tmux: pane layout cycling shortcut
+- Docker: build progress debugging, compose watch for live sync
+- SSH: persistent tunnel configuration via ssh config
+- Regex: possessive quantifiers tip for performance
+- Homebrew: greedy cask upgrade tip
+- Terraform: interactive console for testing expressions
+- apt: all-versions listing tip
+- Linux Core Utils: column formatting, stat metadata
+
+### Fixed
+
+- README: broken GitHub contributor and star badges
+- CONTRIBUTING: incorrect upstream repository URL
+
 ## [1.0.0] - 2025-01-01
 
 ### Added

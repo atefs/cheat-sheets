@@ -20,6 +20,14 @@ and healthy community.
 
 ---
 
+## Scope
+
+This Code of Conduct applies within all community spaces — including the GitHub repository,
+issue tracker, pull requests, and any other forums managed by the project. It also applies when
+an individual is representing the project in public spaces.
+
+---
+
 ## Our Standards
 
 Examples of behavior that contributes to a positive environment:

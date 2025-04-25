@@ -15,3 +15,4 @@
 - [ ] All code blocks have language tags
 - [ ] Examples are real and tested
 - [ ] markdownlint passes
+- [ ] Tested commands on macOS and Linux (or noted platform differences)

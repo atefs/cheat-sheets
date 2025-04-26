@@ -38,6 +38,7 @@ assignees: ''
 - OS: (e.g., Ubuntu 22.04, macOS 14.2)
 - Tool version: (e.g., `git --version` → git version 2.43.0)
 - Shell: (e.g., bash 5.2, zsh 5.9)
+- Architecture: (e.g., x86_64, arm64/Apple Silicon)
 
 ## Additional context
 

@@ -48,3 +48,7 @@ assignees: ''
 ## References
 
 <!-- Link to the official documentation, any existing cheat sheets, or relevant resources -->
+
+## Version coverage
+
+<!-- What version(s) of the tool should the initial cheat sheet target? -->

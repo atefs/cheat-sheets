@@ -44,3 +44,12 @@ paste proposed version here
 
 <!-- If this applies to a specific tool version, please specify -->
 Tool version this applies to:
+
+## Affected platforms
+
+<!-- Does this improvement apply to all platforms or just specific ones? -->
+
+- [ ] All platforms
+- [ ] macOS only
+- [ ] Linux only
+- [ ] Windows / WSL only

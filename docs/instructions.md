@@ -1,3 +1,4 @@
+<!-- Last reviewed: April 2025. Tips and content expanded across all cheat sheets. -->
 # 📘 CLI Cheat Sheets Repository — LLM Implementation Plan
 
 > **Purpose:** This document is a complete, self-contained specification for an LLM to implement a
